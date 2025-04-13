@@ -172,3 +172,9 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+#Executions Logs
+logs/
+
+#Local Database
+database/stats-database.sqlite
