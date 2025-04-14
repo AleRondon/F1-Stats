@@ -83,7 +83,7 @@ def initialize_db(filename:str) -> sqlite3.Connection:
             constructor_number INT,
             session_type TEXT,
             result_time TEXT,                            
-            PRIMARY KEY (round_number,car_number)
+            PRIMARY KEY (round_number,car_number,session_type)
         );
         CREATE TABLE ConstructorsRanking (
             round_number INT,
@@ -182,7 +182,8 @@ def add_results(filename:str,round_number:int, session_type:str ,sql_connection)
                 constructor_result_name:str = result_item[RESULTS_COLUMNS.index('Car')]
                 result_time_str:str = result_item[RESULTS_COLUMNS.index('Time')]
                 try:
-                    result_time_float: float = convert_time_to_seconds(result_time_str)
+                    result_time_float: float = float(result_time_str)
+                    result_time_float= convert_time_to_seconds(result_time_str)
                     result_time_final: str 
                     if session_type in ['Race','Sprint']:
                         if row_index == 1:
@@ -194,7 +195,7 @@ def add_results(filename:str,round_number:int, session_type:str ,sql_connection)
                     else:
                         result_time_final = str(result_time_float)
                 except ValueError as e:
-                    logger.info(f'Driver did not finish: {result_time_str}')
+                    logger.info(f'Driver {car_number} did not finish: {result_time_str}')
                     result_time_final = result_time_str
                 sql_cursor = sql_connection.cursor()
                 sql_cursor.execute('SELECT paddock_number FROM Constructor WHERE result_name = ? ', (constructor_result_name, ))

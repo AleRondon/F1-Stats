@@ -14,10 +14,7 @@ def main():
     while True:
         print(f"\n### Welcome to F1 Stats ##")
         print(f"1. Add a Driver")
-        print(f"2. Import Drivers from CSV")
-        print(f"3. Import Constructors from CSV")
-        print(f"4. Import Rounds from CSV")
-        print(f"5. Add result for a session via CSV")
+        print(f"2. Add result for a session via CSV")
         print(f"0. Exit")
         choice = int(input('Enter your choice (1 - 0):'))
         if choice == 1:
@@ -29,18 +26,6 @@ def main():
             driver = create_new_driver(driver_name,driver_trigramme,driver_car_number,driver_nationality,sql_connection)
             print(f"=== Succesfully created driver {driver.name} with car number {driver.car_number} ===")
         elif choice == 2:
-            logger.info("Option chosen: import drivers")
-            import_drivers(sql_connection)
-            print("=== Succesfully imported drivers ===")
-        elif choice == 3:
-            logger.info("Option chosen: import constructors")
-            import_constructors(sql_connection)
-            print("=== Succesfully imported constructors ===")
-        elif choice == 4:
-            logger.info("Option chosen: import rounds")
-            import_rounds(sql_connection)
-            print("=== Succesfully imported rounds ===")
-        elif choice == 5:
             logger.info("Option chosen: add session result")
             round_number: int = get_round_number()
             session_type: str = get_session_type()
