@@ -5,13 +5,13 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format=LOG_FORMAT)
 
 class Result:
-    def __init__(self,car_position:str,car_number:int,constructor_number:int,round_number: int,session_type: str,result_time: float):
+    def __init__(self,car_position:str,car_number:int,constructor_number:int,round_number: int,session_type: str,result_time: str):
        self.car_position: str = car_position
        self.car_number: int = car_number
        self.constructor_number: int = constructor_number
        self.round_number: int = round_number
        self.session_type: str = session_type
-       self.result_time: float = result_time
+       self.result_time: str = result_time
     
     def add_to_db(self,sql_connection) -> None:
         sql_cursor = sql_connection.cursor()

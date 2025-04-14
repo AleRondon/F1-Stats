@@ -1,6 +1,6 @@
 import logging
-from data.data_management import check_and_initialize_db, create_new_driver, import_drivers, import_constructors, import_rounds
-from data.data_entry import get_driver_trigramme, get_driver_car_number
+from data.data_management import check_and_initialize_db, create_new_driver, import_drivers, import_constructors, import_rounds, add_results
+from data.data_entry import get_driver_trigramme, get_driver_car_number, get_round_number, get_session_type
 from variables import LOG_FILE, LOG_FORMAT, DATABASE_FILE
 
 
@@ -42,8 +42,11 @@ def main():
             print("=== Succesfully imported rounds ===")
         elif choice == 5:
             logger.info("Option chosen: add session result")
-            import_rounds(sql_connection)
-            print("=== Succesfully imported rounds ===")
+            round_number: int = get_round_number()
+            session_type: str = get_session_type()
+            filename: str = input("Filename: ")
+            add_results(filename,round_number,session_type,sql_connection)
+            print("=== Succesfully imported session result ===")
         elif choice == 0:
             print("Exiting...")
             break

@@ -1,21 +1,21 @@
-car_position,car_number,constructor_full_name,result_time
-1,4,McLaren Mercedes,1:15.912
-2,81,McLaren Mercedes,1:16.062
-3,1,Red Bull Racing Honda RBPT,1:16.018
-4,63,Mercedes,1:15.971
-5,22,Racing Bulls Honda RBPT,1:16.225
-6,23,Williams Mercedes,1:16.245
-7,16,Ferrari,1:16.029
-8,44,Ferrari,1:16.213
-9,10,Alpine Renault,1:16.328
-10,55,Williams Mercedes,1:16.360
-11,6,Racing Bulls Honda RBPT,1:16.354
-12,14,Aston Martin Aramco Mercedes,1:16.288
-13,18,Aston Martin Aramco Mercedes,1:16.369
-14,7,Alpine Renault,1:16.315
-15,5,Kick Sauber Ferrari,1:16.516
-16,12,Mercedes,1:16.525
-17,27,Kick Sauber Ferrari,1:16.579
-18,30,Red Bull Racing Honda RBPT,1:17.094
-19,31,Haas Ferrari,1:17.147
-NC,87,Haas Ferrari,DNS
+Pos,No,Driver,Car,Time
+1,4,Lando Norris,McLaren Mercedes,1:15.912
+2,81,Oscar Piastri,McLaren Mercedes,1:16.062
+3,1,Max Verstappen,Red Bull Racing Honda RBPT,1:16.018
+4,63,George Russell,Mercedes,1:15.971
+5,22,Yuki Tsunoda,Racing Bulls Honda RBPT,1:16.225
+6,23,Alexander Albon,Williams Mercedes,1:16.245
+7,16,Charles Leclerc,Ferrari,1:16.029
+8,44,Lewis Hamilton,Ferrari,1:16.213
+9,10,Pierre Gasly,Alpine Renault,1:16.328
+10,55,Carlos Sainz,Williams Mercedes,1:16.360
+11,6,Isack Hadjar,Racing Bulls Honda RBPT,1:16.354
+12,14,Fernando Alonso,Aston Martin Aramco Mercedes,1:16.288
+13,18,Lance Stroll,Aston Martin Aramco Mercedes,1:16.369
+14,7,Jack Doohan,Alpine Renault,1:16.315
+15,5,Gabriel Bortoleto,Kick Sauber Ferrari,1:16.516
+16,12,Kimi Antonelli,Mercedes,1:16.525
+17,27,Nico Hulkenberg,Kick Sauber Ferrari,1:16.579
+18,30,Liam Lawson,Red Bull Racing Honda RBPT,1:17.094
+19,31,Esteban Ocon,Haas Ferrari,1:17.147
+NC,87,Oliver Bearman,Haas Ferrari,DNS

@@ -21,11 +21,14 @@ def check_and_initialize_db(filename:str) -> sqlite3.Connection:
         sql_connection = initialize_db(filename)
 
         logger.info(f"Successfully initialized {filename}.")
+        import_drivers(sql_connection)
+        import_constructors(sql_connection)
+        import_rounds(sql_connection)
         return sql_connection
     else:
         logger.info(f"{filename} already exists. Continuing with regular operations...")
         return sqlite3.connect(filename)
-    
+        
 def initialize_db(filename:str) -> sqlite3.Connection:
     ''' Initialises the database with the required tables
         
@@ -58,6 +61,7 @@ def initialize_db(filename:str) -> sqlite3.Connection:
         CREATE TABLE Constructor (
             id     INTEGER PRIMARY KEY,
             full_name  TEXT,
+            result_name  TEXT,
             short_name TEXT,
             paddock_number INTEGER UNIQUE
         );
@@ -78,24 +82,24 @@ def initialize_db(filename:str) -> sqlite3.Connection:
             car_number INT,
             constructor_number INT,
             session_type TEXT,
-            result_time FLOAT                            
+            result_time TEXT,                            
             PRIMARY KEY (round_number,car_number)
         );
-        CREATE TABLE DriverRankings (
+        CREATE TABLE ConstructorsRanking (
             round_number INT,
             constructor_paddock_number INT,
             constructor_position INT,
             constructor_points INT,
             championship_chance BOOLEAN,
-            PRIMARY KEY (RoundNumber, DriverNumber)
+            PRIMARY KEY (round_number, constructor_paddock_number)
         );
-        CREATE TABLE ConstructorsRankings (
+        CREATE TABLE DriversRanking (
             round_number INT,
-            DriverNumber INT,
-            DriverPosition INT,
-            Points INT,
+            car_number INT,
+            car_position INT,
+            car_points INT,
             championship_chance BOOLEAN,
-            PRIMARY KEY (RoundNumber, DriverNumber)
+            PRIMARY KEY (round_number, car_number)
         )
     ''')
     logger.info(f"Tables Drivers, Rounds, and Constructors created in DB.")
@@ -135,9 +139,10 @@ def import_constructors(sql_connection) -> None:
                     continue
                 constructor_short_name: str = constructor_item[CONSTRUCTORS_COLUMNS.index("short_name")]
                 constructor_full_name: str = constructor_item[CONSTRUCTORS_COLUMNS.index("full_name")]
+                constructor_result_name: str = constructor_item[CONSTRUCTORS_COLUMNS.index("result_name")]
                 constructor_paddock_number: int = int(constructor_item[CONSTRUCTORS_COLUMNS.index("paddock_number")])
                 logger.info(f'Importing constructor : {constructor_short_name}, paddock_number: {constructor_paddock_number}')
-                constructor: Constructor = Constructor(constructor_full_name,constructor_short_name,constructor_paddock_number)
+                constructor: Constructor = Constructor(constructor_full_name,constructor_result_name,constructor_short_name,constructor_paddock_number)
                 constructor.add_to_db(sql_connection)
     except FileNotFoundError:
         logger.critical(f"File {CONSTRUCTORS_FILE} not found")
@@ -172,19 +177,29 @@ def add_results(filename:str,round_number:int, session_type:str ,sql_connection)
             for row_index, result_item in enumerate(results_list):
                 if row_index == 0:
                     continue
-                car_position:str = result_item[RESULTS_COLUMNS.index('car_position')]
-                car_number:int = int(result_item[RESULTS_COLUMNS.index('car_number')])
-                constructor_full_name:str = result_item[RESULTS_COLUMNS.index('constructor_full_name')]
-                result_time_str:str = result_item[RESULTS_COLUMNS.index('result_time')]
-                result_time_float: float = convert_time_to_seconds(result_time_str)
-                if row_index == 1:
-                    top_result = result_time_float
-                else:
-                    result_time_float = top_result + result_time_float
+                car_position:str = result_item[RESULTS_COLUMNS.index('Pos')]
+                car_number:int = int(result_item[RESULTS_COLUMNS.index('No')])
+                constructor_result_name:str = result_item[RESULTS_COLUMNS.index('Car')]
+                result_time_str:str = result_item[RESULTS_COLUMNS.index('Time')]
+                try:
+                    result_time_float: float = convert_time_to_seconds(result_time_str)
+                    result_time_final: str 
+                    if session_type in ['Race','Sprint']:
+                        if row_index == 1:
+                            top_result = result_time_float
+                            result_time_final = str(result_time_float)
+                        else:
+                            result_time_float = top_result + result_time_float
+                            result_time_final = str(result_time_float)
+                    else:
+                        result_time_final = str(result_time_float)
+                except ValueError as e:
+                    logger.info(f'Driver did not finish: {result_time_str}')
+                    result_time_final = result_time_str
                 sql_cursor = sql_connection.cursor()
-                sql_cursor.execute('SELECT paddock_number FROM Constructor WHERE full_name = ? ', (constructor_full_name, ))
+                sql_cursor.execute('SELECT paddock_number FROM Constructor WHERE result_name = ? ', (constructor_result_name, ))
                 constructor_number = sql_cursor.fetchone()[0]
-                result: Result = Result(car_position,car_number,constructor_number,round_number,session_type,result_time_float)
+                result: Result = Result(car_position,car_number,constructor_number,round_number,session_type,result_time_final)
                 result.add_to_db(sql_connection)
     except FileNotFoundError:
         logger.critical(f"File {filename} not found")
