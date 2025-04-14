@@ -1,16 +1,15 @@
 import logging
-import sqlite3
-from data_management import check_and_initialize_db, create_new_driver, import_drivers, import_constructors, import_rounds
-from data_entry import get_driver_trigramme, get_driver_car_number
+from data.data_management import check_and_initialize_db, create_new_driver, import_drivers, import_constructors, import_rounds
+from data.data_entry import get_driver_trigramme, get_driver_car_number
 
 
 logger = logging.getLogger(__name__)
-DATABASE_FILE = '.\database\stats-database.sqlite'
+DATABASE_FILE = '.\\ressources\database\stats-database.sqlite'
 LOG_FILE = '.\logs\stats.log'
 LOG_FORMAT = '%(asctime)s - %(message)s'
-ROUNDS_FILE = '.\database\Rounds.csv'
-DRIVERS_FILE = '.\database\Drivers.csv'
-CONSTRUCTORS_FILE = '.\database\Constructors.csv'
+ROUNDS_FILE = '.\\ressources\data\Rounds.csv'
+DRIVERS_FILE = '.\\ressources\data\Drivers.csv'
+CONSTRUCTORS_FILE = '.\\ressources\data\Constructors.csv'
 
 
 logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format=LOG_FORMAT)
@@ -19,7 +18,7 @@ def main():
     sql_connection = check_and_initialize_db(DATABASE_FILE)
     logger.info("Program ready to run")
     while True:
-        print(f"### Welcome to F1 Stats ##")
+        print(f"\n### Welcome to F1 Stats ##")
         print(f"1. Add a Driver")
         print(f"2. Import Drivers from CSV")
         print(f"3. Import Constructors from CSV")
