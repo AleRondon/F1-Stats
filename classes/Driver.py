@@ -1,13 +1,9 @@
 import logging
 import csv
+from variables import LOG_FILE, LOG_FORMAT, DRIVERS_FILE, DRIVERS_COLUMNS
 
 logger = logging.getLogger(__name__)
-LOG_FILE = ".\logs\stats.log"
-LOG_FORMAT = '%(asctime)s - %(message)s'
-DRIVERS_FILE = '.\\ressources\data\Drivers.csv'
-DRIVERS_COLUMNS = ['name','trigramme','car_number','nationality']
 logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format=LOG_FORMAT)
-
 
 class Driver:
     def __init__(self,name: str,trigramme: str,car_number: int,nationality: str):

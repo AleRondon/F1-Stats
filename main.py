@@ -1,16 +1,10 @@
 import logging
 from data.data_management import check_and_initialize_db, create_new_driver, import_drivers, import_constructors, import_rounds
 from data.data_entry import get_driver_trigramme, get_driver_car_number
+from variables import LOG_FILE, LOG_FORMAT, DATABASE_FILE
 
 
 logger = logging.getLogger(__name__)
-DATABASE_FILE = '.\\ressources\database\stats-database.sqlite'
-LOG_FILE = '.\logs\stats.log'
-LOG_FORMAT = '%(asctime)s - %(message)s'
-ROUNDS_FILE = '.\\ressources\data\Rounds.csv'
-DRIVERS_FILE = '.\\ressources\data\Drivers.csv'
-CONSTRUCTORS_FILE = '.\\ressources\data\Constructors.csv'
-
 
 logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format=LOG_FORMAT)
 
@@ -23,6 +17,7 @@ def main():
         print(f"2. Import Drivers from CSV")
         print(f"3. Import Constructors from CSV")
         print(f"4. Import Rounds from CSV")
+        print(f"5. Add result for a session via CSV")
         print(f"0. Exit")
         choice = int(input('Enter your choice (1 - 0):'))
         if choice == 1:
@@ -43,6 +38,10 @@ def main():
             print("=== Succesfully imported constructors ===")
         elif choice == 4:
             logger.info("Option chosen: import rounds")
+            import_rounds(sql_connection)
+            print("=== Succesfully imported rounds ===")
+        elif choice == 5:
+            logger.info("Option chosen: add session result")
             import_rounds(sql_connection)
             print("=== Succesfully imported rounds ===")
         elif choice == 0:

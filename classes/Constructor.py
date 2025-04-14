@@ -1,8 +1,7 @@
 import logging
+from variables import LOG_FILE, LOG_FORMAT
 
 logger = logging.getLogger(__name__)
-LOG_FILE = ".\logs\stats.log"
-LOG_FORMAT = '%(asctime)s - %(message)s'
 logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format=LOG_FORMAT)
 
 class Constructor:

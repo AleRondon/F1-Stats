@@ -5,16 +5,11 @@ import csv
 from classes.Driver import Driver
 from classes.Constructor import Constructor
 from classes.Round import Round
+from classes.Result import Result
+from helper_functions import convert_time_to_seconds
+from variables import LOG_FILE, LOG_FORMAT, DRIVERS_FILE, DRIVERS_COLUMNS, CONSTRUCTORS_FILE, CONSTRUCTORS_COLUMNS, ROUNDS_FILE, ROUNDS_COLUMNS, RESULTS_FOLDER, RESULTS_COLUMNS
 
 logger = logging.getLogger(__name__)
-LOG_FILE = ".\logs\stats.log"
-LOG_FORMAT = '%(asctime)s - %(message)s'
-ROUNDS_FILE = '.\\ressources\data\Rounds.csv'
-DRIVERS_FILE = '.\\ressources\data\Drivers.csv'
-CONSTRUCTORS_FILE = '.\\ressources\data\Constructors.csv'
-DRIVERS_COLUMNS = ['name','trigramme','car_number','nationality']
-CONSTRUCTORS_COLUMNS = ['full_name','short_name','paddock_number']
-ROUNDS_COLUMNS = ['round_number','round_name','country','circuit','round_date','round_type']
 logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format=LOG_FORMAT)
 
 def check_and_initialize_db(filename:str) -> sqlite3.Connection:
@@ -72,9 +67,36 @@ def initialize_db(filename:str) -> sqlite3.Connection:
             country TEXT,
             circuit TEXT,
             round_date TEXT,
-            round_type TEXT,                             
+            round_type TEXT,
+            round_finished BOOLEAN,                                              
             round_number INTEGER UNIQUE
-        )                    
+            
+        );
+        CREATE TABLE Results (
+            round_number  INT,
+            car_position TEXT,
+            car_number INT,
+            constructor_number INT,
+            session_type TEXT,
+            result_time FLOAT                            
+            PRIMARY KEY (round_number,car_number)
+        );
+        CREATE TABLE DriverRankings (
+            round_number INT,
+            constructor_paddock_number INT,
+            constructor_position INT,
+            constructor_points INT,
+            championship_chance BOOLEAN,
+            PRIMARY KEY (RoundNumber, DriverNumber)
+        );
+        CREATE TABLE ConstructorsRankings (
+            round_number INT,
+            DriverNumber INT,
+            DriverPosition INT,
+            Points INT,
+            championship_chance BOOLEAN,
+            PRIMARY KEY (RoundNumber, DriverNumber)
+        )
     ''')
     logger.info(f"Tables Drivers, Rounds, and Constructors created in DB.")
     return sql_connection
@@ -141,8 +163,32 @@ def import_rounds(sql_connection) -> None:
         logger.critical(f"File {ROUNDS_FILE} not found")
         exit()
 
-def add_results():
-    pass
+def add_results(filename:str,round_number:int, session_type:str ,sql_connection):
+    result_file: str = RESULTS_FOLDER + filename
+    try:
+        with open(result_file,"r") as results:
+            top_result: float = 0
+            results_list = csv.reader(results, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL, skipinitialspace=True)
+            for row_index, result_item in enumerate(results_list):
+                if row_index == 0:
+                    continue
+                car_position:str = result_item[RESULTS_COLUMNS.index('car_position')]
+                car_number:int = int(result_item[RESULTS_COLUMNS.index('car_number')])
+                constructor_full_name:str = result_item[RESULTS_COLUMNS.index('constructor_full_name')]
+                result_time_str:str = result_item[RESULTS_COLUMNS.index('result_time')]
+                result_time_float: float = convert_time_to_seconds(result_time_str)
+                if row_index == 1:
+                    top_result = result_time_float
+                else:
+                    result_time_float = top_result + result_time_float
+                sql_cursor = sql_connection.cursor()
+                sql_cursor.execute('SELECT paddock_number FROM Constructor WHERE full_name = ? ', (constructor_full_name, ))
+                constructor_number = sql_cursor.fetchone()[0]
+                result: Result = Result(car_position,car_number,constructor_number,round_number,session_type,result_time_float)
+                result.add_to_db(sql_connection)
+    except FileNotFoundError:
+        logger.critical(f"File {filename} not found")
+        exit()
 
 def calculate_standings():
     pass
