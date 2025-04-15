@@ -1,5 +1,5 @@
 import logging
-from variables import LOG_FILE, LOG_FORMAT
+from ressources.variables import LOG_FILE, LOG_FORMAT
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format=LOG_FORMAT)

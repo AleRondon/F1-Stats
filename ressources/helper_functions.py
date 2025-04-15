@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-def convert_time_to_seconds(time_string:str):
+def convert_time_to_seconds(time_string:str) -> float | None:
     """
     Convert a time string in format 'h:mm:ss.ss' or 'm:ss.ss' into seconds as a float.
     :param time_string: str - the time string to be converted, e.g., "1:42:06.304" or "1:15.096"

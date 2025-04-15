@@ -1,7 +1,7 @@
 import logging
-from data.data_management import check_and_initialize_db, create_new_driver, import_drivers, import_constructors, import_rounds, add_results
-from data.data_entry import get_driver_trigramme, get_driver_car_number, get_round_number, get_session_type
-from variables import LOG_FILE, LOG_FORMAT, DATABASE_FILE
+from ressources.data.data_management import check_and_initialize_db, create_new_driver, import_drivers, import_constructors, import_rounds, add_results
+from ressources.data.data_entry import get_driver_trigramme, get_driver_car_number, get_round_number, get_session_type
+from ressources.variables import LOG_FILE, LOG_FORMAT, DATABASE_FILE
 
 
 logger = logging.getLogger(__name__)

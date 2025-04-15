@@ -2,12 +2,12 @@ import sqlite3
 import logging
 import os
 import csv
-from classes.Driver import Driver
-from classes.Constructor import Constructor
-from classes.Round import Round
-from classes.Result import Result
-from helper_functions import convert_time_to_seconds
-from variables import LOG_FILE, LOG_FORMAT, DRIVERS_FILE, DRIVERS_COLUMNS, CONSTRUCTORS_FILE, CONSTRUCTORS_COLUMNS, ROUNDS_FILE, ROUNDS_COLUMNS, RESULTS_FOLDER, RESULTS_COLUMNS
+from ressources.classes.Driver import Driver
+from ressources.classes.Constructor import Constructor
+from ressources.classes.Round import Round
+from ressources.classes.Result import Result
+from ressources.helper_functions import convert_time_to_seconds
+from ressources.variables import LOG_FILE, LOG_FORMAT, DRIVERS_FILE, DRIVERS_COLUMNS, CONSTRUCTORS_FILE, CONSTRUCTORS_COLUMNS, ROUNDS_FILE, ROUNDS_COLUMNS, RESULTS_FOLDER, RESULTS_COLUMNS
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format=LOG_FORMAT)
