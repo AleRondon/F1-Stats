@@ -14,7 +14,7 @@ def get_driver_trigramme() -> str:
         return driver_trigramme
     except ValueError as e:
         print(e)
-        logger.warning("Wrong trigramme selected")
+        logger.warning(f'Wrong trigramme selected: {driver_trigramme}')
         return get_driver_trigramme()
 
 def get_driver_car_number() -> int:
@@ -25,7 +25,7 @@ def get_driver_car_number() -> int:
         return driver_car_number
     except ValueError as e:
         print(e)
-        logger.warning("Wrong car number selected")
+        logger.warning(f'Wrong car number selected: {driver_car_number}')
         return get_driver_car_number()
 
 def get_round_number() -> int:
@@ -36,7 +36,7 @@ def get_round_number() -> int:
         return round_number
     except ValueError as e:
         print(e)
-        logger.warning("Wrong round number selected")
+        logger.warning(f'Wrong round number selected: {round_number}')
         return get_round_number()
     
 def get_session_type() -> str:
@@ -47,7 +47,7 @@ def get_session_type() -> str:
         return session_type
     except ValueError as e:
         print(e)
-        logger.warning("Wrong session type")
+        logger.warning(f'Wrong session type: {session_type}')
         return get_session_type()
 
 
