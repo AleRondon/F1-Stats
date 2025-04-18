@@ -16,4 +16,5 @@ venv.bak/
 *.log
 
 #Local Database
+data/database
 *.sqlite
