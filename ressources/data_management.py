@@ -2,11 +2,12 @@ import sqlite3
 import logging
 import os
 import csv
+from typing import Dict
 from ressources.classes.Driver import Driver
 from ressources.classes.Constructor import Constructor
 from ressources.classes.Round import Round
 from ressources.classes.Result import Result
-from ressources.helper_functions import convert_time_to_seconds
+from ressources.helper_functions import convert_time_to_seconds, attribute_points
 from ressources.variables import LOG_FILE, LOG_FORMAT, DRIVERS_FILE, DRIVERS_COLUMNS, CONSTRUCTORS_FILE, CONSTRUCTORS_COLUMNS, ROUNDS_FILE, ROUNDS_COLUMNS, RESULTS_FOLDER, RESULTS_COLUMNS
 
 logger = logging.getLogger(__name__)
@@ -82,7 +83,8 @@ def initialize_db(filename:str) -> sqlite3.Connection:
             car_number INT,
             constructor_number INT,
             session_type TEXT,
-            result_time TEXT,                            
+            result_time TEXT,
+            car_points INT,                            
             PRIMARY KEY (round_number,car_number,session_type)
         );
         CREATE TABLE ConstructorsRanking (
@@ -168,7 +170,7 @@ def import_rounds(sql_connection) -> None:
         logger.critical(f"File {ROUNDS_FILE} not found")
         exit()
 
-def add_results(filename:str,round_number:int, session_type:str ,sql_connection):
+def add_results(filename:str,round_number:int, session_type:str ,sql_connection) -> None:
     result_file: str = RESULTS_FOLDER + filename
     try:
         with open(result_file,"r") as results:
@@ -199,13 +201,62 @@ def add_results(filename:str,round_number:int, session_type:str ,sql_connection)
                 sql_cursor = sql_connection.cursor()
                 sql_cursor.execute('SELECT paddock_number FROM Constructor WHERE result_name = ? ', (constructor_result_name, ))
                 constructor_number = sql_cursor.fetchone()[0]
-                result: Result = Result(car_position,car_number,constructor_number,round_number,session_type,result_time_final)
+                car_points: int = attribute_points(car_position,session_type)
+                logger.info(f'Driver No. {car_number} finishing in position {car_position} has been attributed {car_points} points for session {session_type} of round {round_number}')
+                result: Result = Result(car_position,car_number,constructor_number,round_number,session_type,result_time_final,car_points)
                 result.add_to_db(sql_connection)
     except FileNotFoundError:
         logger.critical(f"File {filename} not found")
         exit()
 
-def calculate_standings():
-    pass
+def mark_round_done(sql_connection,round_number:int) -> None:
+    sql_cursor = sql_connection.cursor()
+    sql_cursor.execute('''UPDATE Rounds SET round_finished = true WHERE round_number = ?''',(round_number,))
+    sql_connection.commit()
 
+def calculate_drivers_rankings(sql_connection,round_number:int) -> None:
+    # -> Get Previous Points for all drivers
+    # -> Add Points for this round
+    # -> Update list of Standings
+    pass
+    
+
+
+
+'''
+# Here's a sample data of drivers and their points.
+drivers_points = {
+    'Hamilton': 418,
+    'Vettel': 306,
+    'Ricciardo': 220,
+    'Raikkonen': 178,
+    'Bottas': 159
+}
+
+# Create an empty list to store the standings.
+standings = []
+
+# Iterate over each driver and their points in descending order of points.
+for position, (driver, points) in enumerate(sorted(drivers_points.items(), key=lambda x: x[1], reverse=True), start=1):
+    # Add a dictionary containing driver's name, points, and position to the standings list.
+    standings.append({
+        'position': position,
+        'driver': driver,
+        'points': points
+    })
+
+# Print the standings for our young apprentice Ale.
+print(standings)
+'''
+        
+   
+
+
+
+
+
+
+
+
+    
 

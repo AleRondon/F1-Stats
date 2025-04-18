@@ -33,6 +33,3 @@ class Driver:
         except FileNotFoundError:
             logger.critical(f"File {DRIVERS_FILE} not found")
             exit()
-
-    
-    
