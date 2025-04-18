@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from ressources.classes.Driver import Driver
 from ressources.classes.Constructor import Constructor
-from ressources.variables import RACE_POINTS, SPRINT_POINTS
+from ressources.variables import RACE_POINTS, SPRINT_POINTS, TOTAL_RACES, TOTAL_SPRINTS, MAX_POINTS_RACE_CONSTRUCTOR, MAX_POINTS_RACE_DRIVER, MAX_POINTS_SPRINT_CONSTRUCTOR, MAX_POINTS_SPRINT_DRIVER
 
 def convert_time_to_seconds(time_string:str) -> float:
     """
@@ -91,3 +91,78 @@ def attribute_points(position:str,session_type:str) -> int:
     else:
         points = 0
     return points
+
+def get_previous_points_driver(sql_connection,car_number:int, round_number:int) -> int:
+    points: int = 0
+    sql_cursor = sql_connection.cursor()
+    if round_number == 1:
+        points = 0
+    else:
+        sql_cursor.execute('''SELECT car_points FROM DriversRanking WHERE round_number = ? and car_number = ?''',(round_number-1,car_number,))
+        points = sql_cursor.fetchone()[0]
+    return points
+
+def get_session_points_driver(sql_connection,car_number:int,round_number:int) -> int:
+    sql_cursor = sql_connection.cursor()
+    sql_cursor.execute('''SELECT SUM(car_points) FROM Results WHERE round_number = ? and car_number = ?''',(round_number,car_number,))
+    points = sql_cursor.fetchone()[0]
+    return points
+
+def get_previous_points_constructor(sql_connection,paddock_number:int, round_number:int) -> int:
+    points: int = 0
+    sql_cursor = sql_connection.cursor()
+    if round_number == 1:
+        points = 0
+    else:
+        sql_cursor.execute('''SELECT constructor_points FROM ConstructorsRanking WHERE round_number = ? and paddock_number = ?''',(round_number-1,paddock_number,))
+        points = sql_cursor.fetchone()[0]
+    return points
+
+def get_session_points_constructor(sql_connection,paddock_number:int,round_number:int) -> int:
+    sql_cursor = sql_connection.cursor()
+    sql_cursor.execute('''SELECT SUM(car_points) FROM Results WHERE round_number = ? and paddock_number = ?''',(round_number,paddock_number,))
+    points = sql_cursor.fetchone()[0]
+    return points
+
+def is_driver_championship_chance(sql_connection,points:int,round_number:int) -> bool:
+    if round_number == 1:
+        return True
+    sql_cursor = sql_connection.cursor()
+    # Get done races
+    sql_cursor.execute('''SELECT COUNT(round_number) FROM ROUNDS WHERE round_finished = 1''')
+    done_races: int = int(sql_cursor.fetchone()[0])
+    # Get done sprints
+    sql_cursor.execute('''SELECT COUNT(round_number) FROM ROUNDS WHERE round_type = "Sprint" AND round_finished = 1''')
+    done_sprints: int = int(sql_cursor.fetchone()[0])
+    # Get points of P1
+    sql_cursor.execute('''SELECT car_points FROM DriversRanking WHERE round_number = ? and car_position = 1''',(round_number,))
+    points_p1: int = int(sql_cursor.fetchone()[0])
+    available_races: int = TOTAL_RACES - done_races
+    available_sprints: int = TOTAL_SPRINTS - done_sprints
+    available_points: int = (available_races*MAX_POINTS_RACE_DRIVER) + (available_sprints*MAX_POINTS_SPRINT_DRIVER)
+    if (points+available_points) > points_p1:
+        return True
+    else:
+        return False
+
+def is_constructor_championship_chance(sql_connection,points:int,round_number:int) -> bool:
+    if round_number == 1:
+        return True
+    sql_cursor = sql_connection.cursor()
+    # Get done races
+    sql_cursor.execute('''SELECT COUNT(round_number) FROM ROUNDS WHERE round_finished = 1''')
+    done_races: int = int(sql_cursor.fetchone()[0])
+    # Get done sprints
+    sql_cursor.execute('''SELECT COUNT(round_number) FROM ROUNDS WHERE round_type = "Sprint" AND round_finished = 1''')
+    done_sprints: int = int(sql_cursor.fetchone()[0])
+    # Get points of P1
+    sql_cursor.execute('''SELECT car_points FROM DriversRanking WHERE round_number = ? and car_position = 1''',(round_number,))
+    points_p1: int = int(sql_cursor.fetchone()[0])
+    available_races: int = TOTAL_RACES - done_races
+    available_sprints: int = TOTAL_SPRINTS - done_sprints
+    available_points: int = (available_races*MAX_POINTS_RACE_CONSTRUCTOR) + (available_sprints*MAX_POINTS_SPRINT_CONSTRUCTOR)
+    if (points+available_points) > points_p1:
+        return True
+    else:
+        return False
+

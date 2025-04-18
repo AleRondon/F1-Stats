@@ -7,7 +7,7 @@ from ressources.classes.Driver import Driver
 from ressources.classes.Constructor import Constructor
 from ressources.classes.Round import Round
 from ressources.classes.Result import Result
-from ressources.helper_functions import convert_time_to_seconds, attribute_points
+from ressources.helper_functions import convert_time_to_seconds, attribute_points, get_previous_points_driver, get_session_points_driver, get_previous_points_constructor, get_session_points_constructor, is_driver_championship_chance, is_constructor_championship_chance
 from ressources.variables import LOG_FILE, LOG_FORMAT, DRIVERS_FILE, DRIVERS_COLUMNS, CONSTRUCTORS_FILE, CONSTRUCTORS_COLUMNS, ROUNDS_FILE, ROUNDS_COLUMNS, RESULTS_FOLDER, RESULTS_COLUMNS
 
 logger = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ def initialize_db(filename:str) -> sqlite3.Connection:
             nationality TEXT                         
         );
 
-        CREATE TABLE Constructor (
+        CREATE TABLE Constructors (
             id     INTEGER PRIMARY KEY,
             full_name  TEXT,
             result_name  TEXT,
@@ -81,7 +81,7 @@ def initialize_db(filename:str) -> sqlite3.Connection:
             round_number  INT,
             car_position TEXT,
             car_number INT,
-            constructor_number INT,
+            paddock_number INT,
             session_type TEXT,
             result_time TEXT,
             car_points INT,                            
@@ -89,11 +89,11 @@ def initialize_db(filename:str) -> sqlite3.Connection:
         );
         CREATE TABLE ConstructorsRanking (
             round_number INT,
-            constructor_paddock_number INT,
+            paddock_number INT,
             constructor_position INT,
             constructor_points INT,
             championship_chance BOOLEAN,
-            PRIMARY KEY (round_number, constructor_paddock_number)
+            PRIMARY KEY (round_number, paddock_number)
         );
         CREATE TABLE DriversRanking (
             round_number INT,
@@ -199,7 +199,7 @@ def add_results(filename:str,round_number:int, session_type:str ,sql_connection)
                     logger.info(f'Driver {car_number} did not finish: {result_time_str}')
                     result_time_final = result_time_str
                 sql_cursor = sql_connection.cursor()
-                sql_cursor.execute('SELECT paddock_number FROM Constructor WHERE result_name = ? ', (constructor_result_name, ))
+                sql_cursor.execute('SELECT paddock_number FROM Constructors WHERE result_name = ? ', (constructor_result_name, ))
                 constructor_number = sql_cursor.fetchone()[0]
                 car_points: int = attribute_points(car_position,session_type)
                 logger.info(f'Driver No. {car_number} finishing in position {car_position} has been attributed {car_points} points for session {session_type} of round {round_number}')
@@ -215,44 +215,71 @@ def mark_round_done(sql_connection,round_number:int) -> None:
     sql_connection.commit()
 
 def calculate_drivers_rankings(sql_connection,round_number:int) -> None:
-    # -> Get Previous Points for all drivers
-    # -> Add Points for this round
-    # -> Update list of Standings
-    pass
+    sql_cursor = sql_connection.cursor()
     
+    # Fetch all car numbers in Drivers DB as integers
+    sql_cursor.execute('SELECT car_number FROM Drivers')
+    cars: list[int] = [int(car[0]) for car in sql_cursor.fetchall()]
+    
+    # Calculate points for each Driver for previous and current round
+    drivers_points: Dict[int,int] = {}
+    for car_number in cars:
+        points:int = get_previous_points_driver(sql_connection,car_number,round_number) + get_session_points_driver(sql_connection,car_number,round_number)
+        logger.info(f'Car number {car_number} has {points} points after round No. {round_number}')
+        drivers_points[car_number] = points
 
+    
+    # Generate standings list with driver positions based on points
+    standings: list = [] 
+    for position, (car_number, points) in enumerate(sorted(drivers_points.items(), key=lambda x: x[1], reverse=True), start=1):
+        standings.append({
+            'car_position': position,
+            'car_number': car_number,
+            'points': points
+        })
 
+    # Insert rankings into DriversRanking table    
+    for ranking in standings:
+        championship_chance:bool = True
+        if ranking["car_position"] == 1:
+            championship_chance = True
+        else:
+            championship_chance = is_driver_championship_chance(sql_connection,ranking["points"],round_number)
+        logger.info(f'Adding Ranking for car: {ranking["car_number"]} in position {ranking["car_position"]} with {ranking["points"]} after round No. {round_number}. Championship chances: {championship_chance}.')
+        sql_cursor.execute('''INSERT OR IGNORE INTO DriversRanking (round_number,car_number,car_position,car_points,championship_chance) VALUES (?,?,?,?,?)''',(round_number,ranking["car_number"],ranking["car_position"],ranking["points"],championship_chance,))
+        sql_connection.commit()
 
-'''
-# Here's a sample data of drivers and their points.
-drivers_points = {
-    'Hamilton': 418,
-    'Vettel': 306,
-    'Ricciardo': 220,
-    'Raikkonen': 178,
-    'Bottas': 159
-}
+def calculate_constructors_rankings(sql_connection,round_number:int) -> None:
+    sql_cursor = sql_connection.cursor()
 
-# Create an empty list to store the standings.
-standings = []
+    # Fetch all constructor's paddock numbers in Constructors DB
+    sql_cursor.execute('Select paddock_number FROM Constructors')
+    constructors: list[int] = [int(constructor[0]) for constructor in sql_cursor.fetchall()]
 
-# Iterate over each driver and their points in descending order of points.
-for position, (driver, points) in enumerate(sorted(drivers_points.items(), key=lambda x: x[1], reverse=True), start=1):
-    # Add a dictionary containing driver's name, points, and position to the standings list.
-    standings.append({
-        'position': position,
-        'driver': driver,
-        'points': points
-    })
+    # Calculate points for each Constructors for each and previous round
+    constructors_points: Dict[int,int] = {}
+    for paddock_number in constructors:
+        points: int = get_previous_points_constructor(sql_connection,paddock_number,round_number) + get_session_points_constructor(sql_connection,paddock_number,round_number)
+        logger.info(f'Constructor No. {paddock_number} has {points} points after round No. {round_number}')
+        constructors_points[paddock_number] = points
+    
+    # Generate standing list with constructors position based on points
+    standings: list = []
+    for position, (paddock_number,points) in enumerate(sorted(constructors_points.items(), key=lambda x: x[1], reverse=True), start=1):
+        standings.append({
+            'constructor_position':position,
+            'paddock_number': paddock_number,
+            'points':points
+        })
 
-# Print the standings for our young apprentice Ale.
-print(standings)
-'''
-        
-   
-
-
-
+    # Insert rankings into Constructors Table
+    for ranking in standings:
+        championship_chance:bool = True
+        if position > 1:
+            championship_chance = is_constructor_championship_chance(sql_connection,ranking["points"],round_number)
+        logger.info(f'Adding Ranking for car: {ranking["paddock_number"]} in position {ranking["constructor_position"]} with {ranking["points"]} after round No. {round_number}. Championship chances: {championship_chance}.')
+        sql_cursor.execute('''INSERT OR IGNORE INTO ConstructorsRanking (round_number,paddock_number,constructor_position,constructor_points,championship_chance) VALUES (?,?,?,?,?)''',(round_number,ranking["paddock_number"],ranking["constructor_position"],ranking["points"],championship_chance,))
+        sql_connection.commit()
 
 
 

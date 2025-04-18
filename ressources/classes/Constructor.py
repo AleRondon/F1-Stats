@@ -13,6 +13,6 @@ class Constructor:
 
     def add_to_db(self,sql_connection) -> None:
         sql_cursor = sql_connection.cursor()
-        sql_cursor.execute('''INSERT OR IGNORE INTO Constructor (full_name,result_name, short_name, paddock_number) VALUES (?,?,?,?)''',(self.full_name,self.result_name,self.short_name,self.paddock_number,))
+        sql_cursor.execute('''INSERT OR IGNORE INTO Constructors (full_name,result_name, short_name, paddock_number) VALUES (?,?,?,?)''',(self.full_name,self.result_name,self.short_name,self.paddock_number,))
         sql_connection.commit()
         logger.info(f'Constructor No. {self.paddock_number} - {self.full_name} was succesfully added to DB.')

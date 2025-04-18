@@ -1,5 +1,5 @@
 import logging
-from ressources.data_management import check_and_initialize_db, create_new_driver, add_results, mark_round_done, calculate_drivers_rankings
+from ressources.data_management import check_and_initialize_db, create_new_driver, add_results, mark_round_done, calculate_drivers_rankings, calculate_constructors_rankings
 from ressources.data_entry import get_driver_trigramme, get_driver_car_number, get_round_number, get_session_type
 from ressources.variables import LOG_FILE, LOG_FORMAT, DATABASE_FILE
 
@@ -33,8 +33,8 @@ def main():
             add_results(filename,round_number,session_type,sql_connection)
             if session_type == 'Race':
                 mark_round_done(sql_connection,round_number)
-                #calculate_drivers_rankings(sql_connection,round_number)
-
+                calculate_drivers_rankings(sql_connection,round_number)
+                calculate_constructors_rankings(sql_connection,round_number)
             print("=== Succesfully imported session result ===")
         elif choice == 0:
             print("Exiting...")
