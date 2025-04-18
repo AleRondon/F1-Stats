@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-def convert_time_to_seconds(time_string:str) -> float | None:
+def convert_time_to_seconds(time_string:str) -> float:
     """
     Convert a time string in format 'h:mm:ss.ss' or 'm:ss.ss' into seconds as a float.
     :param time_string: str - the time string to be converted, e.g., "1:42:06.304" or "1:15.096"
@@ -39,6 +39,9 @@ def convert_time_to_seconds(time_string:str) -> float | None:
                     raise ValueError("Invalid time string format")
             except ValueError:
                 print(f"Error: Invalid time string '{time_string}'. Please ensure the input is in one of these formats: 'h:mm:ss.sss', 'm:ss.sss', or 'ss.sss'.")
-                return None
+                raise ValueError("Driver did not finished the session")
 
     return total_seconds
+
+def points_attribution():
+    pass
