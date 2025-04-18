@@ -16,4 +16,4 @@ venv.bak/
 stats.log
 
 #Local Database
-data/database/stats-database.sqlite
+stats-database.sqlite
