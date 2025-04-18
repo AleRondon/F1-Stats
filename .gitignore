@@ -13,7 +13,7 @@ env.bak/
 venv.bak/
 
 #Executions Logs
-stats.log
+*.log
 
 #Local Database
-stats-database.sqlite
+*.sqlite
