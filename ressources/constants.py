@@ -2,7 +2,7 @@ from typing import Dict
 
 DATABASE_FILE: str = '.\\data\\database\\stats-database.sqlite'
 LOG_FILE: str = '.\\stats.log'
-LOG_FORMAT: str = '%(asctime)s - %(message)s'
+LOG_FORMAT: str = '%(asctime)s | %(levelname)s | %(module)s | %(funcName)s - %(message)s'
 ROUNDS_FILE: str = '.\\data\\Rounds.csv'
 DRIVERS_FILE: str = '.\\data\\Drivers.csv'
 CONSTRUCTORS_FILE: str = '.\\data\\Constructors.csv'

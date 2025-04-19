@@ -1,8 +1,12 @@
+import logging
 from datetime import timedelta
-
 from ressources.classes.Driver import Driver
 from ressources.classes.Constructor import Constructor
-from ressources.variables import RACE_POINTS, SPRINT_POINTS, TOTAL_RACES, TOTAL_SPRINTS, MAX_POINTS_RACE_CONSTRUCTOR, MAX_POINTS_RACE_DRIVER, MAX_POINTS_SPRINT_CONSTRUCTOR, MAX_POINTS_SPRINT_DRIVER
+from ressources.database_functions_sqlite3 import get_points_by_driver_ranking_fromDB, get_points_by_constructors_ranking_fromDB,get_done_races_fromDB,get_done_sprints_fromDB,get_points_of_P1_Driver_fromDB, get_points_of_P1_Constructor_fromDB
+from ressources.constants import RACE_POINTS, SPRINT_POINTS, TOTAL_RACES, TOTAL_SPRINTS, MAX_POINTS_RACE_CONSTRUCTOR, MAX_POINTS_RACE_DRIVER, MAX_POINTS_SPRINT_CONSTRUCTOR, MAX_POINTS_SPRINT_DRIVER, LOG_FILE, LOG_FORMAT
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format=LOG_FORMAT)
 
 def convert_time_to_seconds(time_string:str) -> float:
     """
@@ -46,42 +50,6 @@ def convert_time_to_seconds(time_string:str) -> float:
 
     return total_seconds
 
-def get_driver_by_number(sql_connection,car_number:int) -> Driver:
-    sql_cursor = sql_connection.cursor()
-    sql_cursor.execute('''Select name, trigramme, nationality from Drivers where car_number = ?''',(car_number,))
-    name:str = sql_cursor.fetchone()[0]
-    trigramme:str = sql_cursor.fetchone()[1]
-    nationality:str = sql_cursor.fetchone()[2]
-    driver:Driver = Driver(name,trigramme,car_number,nationality)
-    return driver
-
-def get_driver_by_trigramme(sql_connection,trigramme:str) -> Driver:
-    sql_cursor = sql_connection.cursor()
-    sql_cursor.execute('''Select name, car_number, nationality from Drivers where trigramme = ?''',(trigramme,))
-    name:str = sql_cursor.fetchone()[0]
-    car_number:int = int(sql_cursor.fetchone()[1])
-    nationality:str = sql_cursor.fetchone()[2]
-    driver:Driver = Driver(name,trigramme,car_number,nationality)
-    return driver
-
-def get_constructor_by_number(sql_connection,paddock_number:int) -> Constructor:
-    sql_cursor = sql_connection.cursor()
-    sql_cursor.execute('''Select full_name,result_name,short_name from Constructor where paddock_number = ?''',(paddock_number,))
-    full_name:str = sql_cursor.fetchone()[0]
-    result_name:str = sql_cursor.fetchone()[1]
-    short_name:str = sql_cursor.fetchone()[2]
-    constructor:Constructor = Constructor(full_name,result_name,short_name,paddock_number)
-    return constructor
-
-def get_constructor_by_name(sql_connection,result_name:str) -> Constructor:
-    sql_cursor = sql_connection.cursor()
-    sql_cursor.execute('''Select full_name,paddock_number,short_name from Constructor where result_name = ?''',(result_name,))
-    full_name:str = sql_cursor.fetchone()[0]
-    paddock_number:int = int(sql_cursor.fetchone()[1])
-    short_name:str = sql_cursor.fetchone()[2]
-    constructor:Constructor = Constructor(full_name,result_name,short_name,paddock_number)
-    return constructor
-
 def attribute_points(position:str,session_type:str) -> int:
     points: int = 0
     if session_type == 'Race':
@@ -94,49 +62,27 @@ def attribute_points(position:str,session_type:str) -> int:
 
 def get_previous_points_driver(sql_connection,car_number:int, round_number:int) -> int:
     points: int = 0
-    sql_cursor = sql_connection.cursor()
     if round_number == 1:
         points = 0
     else:
-        sql_cursor.execute('''SELECT car_points FROM DriversRanking WHERE round_number = ? and car_number = ?''',(round_number-1,car_number,))
-        points = sql_cursor.fetchone()[0]
-    return points
-
-def get_session_points_driver(sql_connection,car_number:int,round_number:int) -> int:
-    sql_cursor = sql_connection.cursor()
-    sql_cursor.execute('''SELECT SUM(car_points) FROM Results WHERE round_number = ? and car_number = ?''',(round_number,car_number,))
-    points = sql_cursor.fetchone()[0]
+        points = get_points_by_driver_ranking_fromDB(sql_connection,round_number-1,car_number)
     return points
 
 def get_previous_points_constructor(sql_connection,paddock_number:int, round_number:int) -> int:
     points: int = 0
-    sql_cursor = sql_connection.cursor()
     if round_number == 1:
         points = 0
     else:
-        sql_cursor.execute('''SELECT constructor_points FROM ConstructorsRanking WHERE round_number = ? and paddock_number = ?''',(round_number-1,paddock_number,))
-        points = sql_cursor.fetchone()[0]
-    return points
-
-def get_session_points_constructor(sql_connection,paddock_number:int,round_number:int) -> int:
-    sql_cursor = sql_connection.cursor()
-    sql_cursor.execute('''SELECT SUM(car_points) FROM Results WHERE round_number = ? and paddock_number = ?''',(round_number,paddock_number,))
-    points = sql_cursor.fetchone()[0]
+        points = get_points_by_constructors_ranking_fromDB(sql_connection,round_number-1,paddock_number)
     return points
 
 def is_driver_championship_chance(sql_connection,points:int,round_number:int) -> bool:
     if round_number == 1:
         return True
-    sql_cursor = sql_connection.cursor()
-    # Get done races
-    sql_cursor.execute('''SELECT COUNT(round_number) FROM ROUNDS WHERE round_finished = 1''')
-    done_races: int = int(sql_cursor.fetchone()[0])
-    # Get done sprints
-    sql_cursor.execute('''SELECT COUNT(round_number) FROM ROUNDS WHERE round_type = "Sprint" AND round_finished = 1''')
-    done_sprints: int = int(sql_cursor.fetchone()[0])
+    done_races:int = get_done_races_fromDB(sql_connection)
+    done_sprints: int = get_done_sprints_fromDB(sql_connection)
     # Get points of P1
-    sql_cursor.execute('''SELECT car_points FROM DriversRanking WHERE round_number = ? and car_position = 1''',(round_number,))
-    points_p1: int = int(sql_cursor.fetchone()[0])
+    points_p1: int = get_points_of_P1_Driver_fromDB(sql_connection,round_number)
     available_races: int = TOTAL_RACES - done_races
     available_sprints: int = TOTAL_SPRINTS - done_sprints
     available_points: int = (available_races*MAX_POINTS_RACE_DRIVER) + (available_sprints*MAX_POINTS_SPRINT_DRIVER)
@@ -148,16 +94,10 @@ def is_driver_championship_chance(sql_connection,points:int,round_number:int) ->
 def is_constructor_championship_chance(sql_connection,points:int,round_number:int) -> bool:
     if round_number == 1:
         return True
-    sql_cursor = sql_connection.cursor()
-    # Get done races
-    sql_cursor.execute('''SELECT COUNT(round_number) FROM ROUNDS WHERE round_finished = 1''')
-    done_races: int = int(sql_cursor.fetchone()[0])
-    # Get done sprints
-    sql_cursor.execute('''SELECT COUNT(round_number) FROM ROUNDS WHERE round_type = "Sprint" AND round_finished = 1''')
-    done_sprints: int = int(sql_cursor.fetchone()[0])
+    done_races:int = get_done_races_fromDB(sql_connection)
+    done_sprints: int = get_done_sprints_fromDB(sql_connection)
     # Get points of P1
-    sql_cursor.execute('''SELECT car_points FROM DriversRanking WHERE round_number = ? and car_position = 1''',(round_number,))
-    points_p1: int = int(sql_cursor.fetchone()[0])
+    points_p1: int = get_points_of_P1_Constructor_fromDB(sql_connection,round_number)
     available_races: int = TOTAL_RACES - done_races
     available_sprints: int = TOTAL_SPRINTS - done_sprints
     available_points: int = (available_races*MAX_POINTS_RACE_CONSTRUCTOR) + (available_sprints*MAX_POINTS_SPRINT_CONSTRUCTOR)

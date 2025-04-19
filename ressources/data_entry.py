@@ -1,6 +1,6 @@
 import re
 import logging
-from ressources.variables import LOG_FILE, LOG_FORMAT, VALID_SESSION_TYPES
+from ressources.constants import LOG_FILE, LOG_FORMAT, VALID_SESSION_TYPES
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format=LOG_FORMAT)

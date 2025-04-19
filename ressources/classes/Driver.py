@@ -1,6 +1,6 @@
 import logging
 import csv
-from ressources.variables import LOG_FILE, LOG_FORMAT, DRIVERS_FILE, DRIVERS_COLUMNS
+from ressources.constants import LOG_FILE, LOG_FORMAT, DRIVERS_FILE, DRIVERS_COLUMNS
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format=LOG_FORMAT)
@@ -17,7 +17,7 @@ class Driver:
         sql_cursor.execute('''INSERT OR IGNORE INTO Drivers (name, trigramme, car_number, nationality) VALUES (?,?,?,?)''',(self.name,self.trigramme,self.car_number,self.nationality,))
         sql_connection.commit()
         logger.info(f'Driver No. {self.car_number} - {self.name} was succesfully added to DB.')
-
+        
     def add_to_csv(self) -> None:
         try:
             with open(DRIVERS_FILE,"a",newline="") as csvfile:
