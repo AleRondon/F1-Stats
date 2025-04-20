@@ -16,7 +16,10 @@ class Result:
     
     def add_to_db(self,sql_connection) -> None:
         sql_cursor = sql_connection.cursor()
-        sql_cursor.execute('''INSERT OR IGNORE INTO Results (car_position, car_number, paddock_number,round_number, session_type,result_time,car_points) VALUES (?,?,?,?,?,?,?)''',(self.car_position,self.car_number,self.paddock_number,self.round_number,self.session_type,self.result_time,self.car_points))
-        sql_connection.commit()
-        logger.info(f'Result for session {self.session_type} of Car No. {self.car_number} for Round No.- {self.round_number} was succesfully added to DB.')
+        try:
+            sql_cursor.execute('''INSERT INTO Results (car_position, car_number, paddock_number,round_number, session_type,result_time,car_points) VALUES (?,?,?,?,?,?,?)''',(self.car_position,self.car_number,self.paddock_number,self.round_number,self.session_type,self.result_time,self.car_points))
+            sql_connection.commit()
+            logger.info(f'Result for session {self.session_type} of Car No. {self.car_number} for Round No.- {self.round_number} was succesfully added to DB.')
+        except Exception as e:
+            logger.error(f'Error {e} detected when trying to commit result for car No. {self.car_number} in round No. {self.round_number} for session {self.session_type}')
 

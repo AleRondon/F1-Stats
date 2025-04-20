@@ -14,9 +14,12 @@ class Driver:
     
     def add_to_db(self,sql_connection) -> None:
         sql_cursor = sql_connection.cursor()
-        sql_cursor.execute('''INSERT OR IGNORE INTO Drivers (name, trigramme, car_number, nationality) VALUES (?,?,?,?)''',(self.name,self.trigramme,self.car_number,self.nationality,))
-        sql_connection.commit()
-        logger.info(f'Driver No. {self.car_number} - {self.name} was succesfully added to DB.')
+        try:
+            sql_cursor.execute('''INSERT INTO Drivers (name, trigramme, car_number, nationality) VALUES (?,?,?,?)''',(self.name,self.trigramme,self.car_number,self.nationality,))
+            sql_connection.commit()
+            logger.info(f'Driver No. {self.car_number} - {self.name} was succesfully added to DB.')
+        except Exception as e:
+            logger.error(f'Error {e} detected when trying to commit Driver No. {self.car_number} - {self.name}')
         
     def add_to_csv(self) -> None:
         try:

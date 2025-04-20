@@ -165,7 +165,7 @@ def get_all_constructors_paddocknumber_fromDB(sql_connection:sqlite3.Connection)
 def add_round_toDB(sql_connection:sqlite3.Connection,round:Round) -> None:
     '''Adds a new round into the Rounds Table of the Database'''
     sql_cursor = sql_connection.cursor()
-    sql_cursor.execute('''INSERT OR IGNORE INTO Rounds (round_number,round_name,country,circuit,round_date,round_type,round_finished) VALUES (?,?,?,?,?,?,?)''',(round.round_number,round.round_name,round.country,round.circuit,round.round_date,round.round_type,round.round_finished,))
+    sql_cursor.execute('''INSERT INTO Rounds (round_number,round_name,country,circuit,round_date,round_type,round_finished) VALUES (?,?,?,?,?,?,?)''',(round.round_number,round.round_name,round.country,round.circuit,round.round_date,round.round_type,round.round_finished,))
     sql_connection.commit()
     logger.info(f'Round No. {round.round_number} - {round.round_name} was succesfully added to DB.')
 
@@ -201,7 +201,7 @@ def get_done_sprints_fromDB(sql_connection:sqlite3.Connection) -> int:
 def add_results_toDB(sql_connection:sqlite3.Connection,result:Result) -> None:
     '''Adds a new result into the Results Table of the Database'''
     sql_cursor = sql_connection.cursor()
-    sql_cursor.execute('''INSERT OR IGNORE INTO Results (car_position, car_number, paddock_number,round_number, session_type,result_time,car_points) VALUES (?,?,?,?,?,?,?)''',(result.car_position,result.car_number,result.paddock_number,result.round_number,result.session_type,result.result_time,result.car_points))
+    sql_cursor.execute('''INSERT INTO Results (car_position, car_number, paddock_number,round_number, session_type,result_time,car_points) VALUES (?,?,?,?,?,?,?)''',(result.car_position,result.car_number,result.paddock_number,result.round_number,result.session_type,result.result_time,result.car_points))
     sql_connection.commit()
     logger.info(f'Result for session {result.session_type} of Car No. {result.car_number} for Round No.- {result.round_number} was succesfully added to DB.')
 
@@ -231,7 +231,7 @@ def get_points_by_constructors_round_fromDB(sql_connection:sqlite3.Connection,pa
 def add_drivers_ranking_toDB(sql_connection:sqlite3.Connection,driver_ranking:DriverRanking) -> None:
     '''Adds a new driver's ranking into the Drivers Ranking Table of the Database'''
     sql_cursor = sql_connection.cursor()
-    sql_cursor.execute('''INSERT OR IGNORE INTO DriversRanking (round_number,car_number,car_position,car_points,championship_chance) VALUES (?,?,?,?,?)''',(driver_ranking.round_number,driver_ranking.car_number,driver_ranking.car_position,driver_ranking.car_points,driver_ranking.championship_chance,))
+    sql_cursor.execute('''INSERT INTO DriversRanking (round_number,car_number,car_position,car_points,championship_chance) VALUES (?,?,?,?,?)''',(driver_ranking.round_number,driver_ranking.car_number,driver_ranking.car_position,driver_ranking.car_points,driver_ranking.championship_chance,))
     sql_connection.commit()
     logger.info(f'Ranking added to DB for car: {driver_ranking.car_number} in position {driver_ranking.car_position} with {driver_ranking.car_points} after round No. {driver_ranking.round_number}. Championship chances: {driver_ranking.championship_chance}.')
 
@@ -261,8 +261,9 @@ def get_points_of_P1_Driver_fromDB(sql_connection:sqlite3.Connection,round_numbe
 
 def add_constructor_ranking_toDB(sql_connection:sqlite3.Connection,constructor_ranking:ConstructorRanking) -> None:
     '''Adds a new constructor's ranking into the Constructors Ranking Table of the Database'''
+    logger.info(f'Adding ranking to DB for constructor: {constructor_ranking.paddock_number} in position {constructor_ranking.constructor_position} with {constructor_ranking.constructor_points} after round No. {constructor_ranking.round_number}. Championship chances: {constructor_ranking.championship_chance}.')
     sql_cursor = sql_connection.cursor()
-    sql_cursor.execute('''INSERT OR IGNORE INTO ConstructorsRanking (round_number,paddock_number,constructor_position,constructor_points,championship_chance) VALUES (?,?,?,?,?)''',(constructor_ranking.round_number,constructor_ranking.paddock_number,constructor_ranking.constructor_position,constructor_ranking.constructor_points,constructor_ranking.championship_chance,))
+    sql_cursor.execute('''INSERT INTO ConstructorsRanking (round_number,paddock_number,constructor_position,constructor_points,championship_chance) VALUES (?,?,?,?,?)''',(constructor_ranking.round_number,constructor_ranking.paddock_number,constructor_ranking.constructor_position,constructor_ranking.constructor_points,constructor_ranking.championship_chance,))
     sql_connection.commit()
     logger.info(f'Ranking added to DB for constructor: {constructor_ranking.paddock_number} in position {constructor_ranking.constructor_position} with {constructor_ranking.constructor_points} after round No. {constructor_ranking.round_number}. Championship chances: {constructor_ranking.championship_chance}.')
     

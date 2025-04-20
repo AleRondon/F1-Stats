@@ -34,14 +34,16 @@ def check_and_initialize_db(filename:str) -> sqlite3.Connection:
         return sqlite3.connect(filename)
         
 
-def create_new_driver(name:str, trigramme:str,car_number:int,nationality:str,sql_connection) -> Driver:
+def create_new_driver(name:str, trigramme:str,car_number:int,nationality:str,sql_connection:sqlite3.Connection) -> Driver:
+    '''Creates a new driver class and writes it in the Database and in the CSV file and returns the driver in the Driver class'''
     logger.info(f'Creating driver with name: {name}, trigramme: {trigramme}, car_number: {car_number}, and nationality: {nationality}')
     driver: Driver = Driver(name,trigramme,car_number,nationality)
     driver.add_to_csv()
     driver.add_to_db(sql_connection)
     return driver
 
-def import_drivers(sql_connection) -> None:
+def import_drivers(sql_connection:sqlite3.Connection) -> None:
+    '''Imports drivers from a SCV file ("DRIVERS_FILE" in the constants.py file), with the columns "name", "trigramme","car_number", "nationality", creates the driver in the class Driver and stores it to the DB'''
     try:
         with open(DRIVERS_FILE,"r") as drivers_file:
             drivers_list = csv.reader(drivers_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL, skipinitialspace=True)
@@ -59,7 +61,8 @@ def import_drivers(sql_connection) -> None:
         logger.critical(f"File {DRIVERS_FILE} not found")
         exit()
 
-def import_constructors(sql_connection) -> None:
+def import_constructors(sql_connection:sqlite3.Connection) -> None:
+    '''Imports Constructors from a SCV file ("CONSTRUCTORS_FILE" in the constants.py file), with the columns "short_name", "full_name","result_name", "paddock_number", creates the constructors in the class Constructor and stores it to the DB'''
     try:
         with open(CONSTRUCTORS_FILE,"r") as constructor_file:
             constructor_list = csv.reader(constructor_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL, skipinitialspace=True)
@@ -77,7 +80,8 @@ def import_constructors(sql_connection) -> None:
         logger.critical(f"File {CONSTRUCTORS_FILE} not found")
         exit()
 
-def import_rounds(sql_connection) -> None:
+def import_rounds(sql_connection:sqlite3.Connection) -> None:
+    '''Imports Rounds from a SCV file ("ROUNDS_FILE" in the constants.py file), with the columns "round_number", "round_name","country", "circuit","round_date", "round_type", creates the constructors in the class Constructor and stores it to the DB'''
     try:
         with open(ROUNDS_FILE,"r") as rounds_file:
             rounds_list = csv.reader(rounds_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL, skipinitialspace=True)
@@ -97,7 +101,8 @@ def import_rounds(sql_connection) -> None:
         logger.critical(f"File {ROUNDS_FILE} not found")
         exit()
 
-def add_results(filename:str,round_number:int, session_type:str ,sql_connection) -> None:
+def add_results(filename:str,round_number:int, session_type:str ,sql_connection:sqlite3.Connection) -> None:
+    '''For each of the results in a result_file, stored in the path RESULTS_FOLDER (specified in the constants.py file), reads the file, extract the result for each car, calculates the time for each position based on the deltas, adds the constructors paddock_number and the calculated points, and stores them in the Results Database'''
     result_file: str = RESULTS_FOLDER + filename
     try:
         with open(result_file,"r") as results:
@@ -134,10 +139,12 @@ def add_results(filename:str,round_number:int, session_type:str ,sql_connection)
         logger.critical(f"File {filename} not found")
         exit()
 
-def mark_round_done(sql_connection,round_number:int) -> None:
+def mark_round_done(sql_connection:sqlite3.Connection,round_number:int) -> None:
+    '''Adds the flag round_done to the round in the Rounds Database'''
     mark_round_done_toDB(sql_connection,round_number)
 
-def calculate_drivers_rankings(sql_connection,round_number:int) -> None:
+def calculate_drivers_rankings(sql_connection:sqlite3.Connection,round_number:int) -> None:
+    '''Calculates the driver's ranking according to the points of the sessions (and the accumulated points in the previous session) for all the cars stored in the Drivers Table, then orders the rankings and adds the position, and finally calculates if the driver has mathematical chances to win the championship. After all calculations are stored, the ranking is stored in the Drivers Ranking Table of the DB for that round.'''
     cars: list[int] = get_all_drivers_carnumber_fromDB(sql_connection)
     
     # Calculate points for each Driver for previous and current round
@@ -167,7 +174,8 @@ def calculate_drivers_rankings(sql_connection,round_number:int) -> None:
         driver_ranking:DriverRanking = DriverRanking(round_number,ranking["car_number"],ranking["car_position"],ranking["points"],championship_chance)
         driver_ranking.add_to_db(sql_connection)
 
-def calculate_constructors_rankings(sql_connection,round_number:int) -> None:
+def calculate_constructors_rankings(sql_connection:sqlite3.Connection,round_number:int) -> None:
+    '''Calculates the constructors's ranking according to the points of the sessions (and the accumulated points in the previous session) for all the constructors stored in the Constructors Table, then orders the rankings and adds the position, and finally calculates if the constructor has mathematical chances to win the championship. After all calculations are stored, the ranking is stored in the Constructors Ranking Table of the DB for that round.'''
     constructors: list[int] = get_all_constructors_paddocknumber_fromDB(sql_connection)
 
     # Calculate points for each Constructors for each and previous round
@@ -178,18 +186,21 @@ def calculate_constructors_rankings(sql_connection,round_number:int) -> None:
         constructors_points[paddock_number] = points
     
     # Generate standing list with constructors position based on points
+    logger.info(f'Generating constructors standing')
     standings: list = []
     for position, (paddock_number,points) in enumerate(sorted(constructors_points.items(), key=lambda x: x[1], reverse=True), start=1):
+        logger.info(f'Constructor no. {paddock_number} is in {position} position with {points} by round {round_number}')
         standings.append({
             'constructor_position':position,
             'paddock_number': paddock_number,
             'points':points
         })
+    logger.info(f'Final standings by round {round_number}: {standings}')
         
     # Insert rankings into Constructors Table
     for ranking in standings:
         championship_chance:bool = True
-        if position > 1:
+        if ranking["constructor_position"] > 1:
             championship_chance = is_constructor_championship_chance(sql_connection,ranking["points"],round_number)
         logger.info(f'Adding Ranking for constructor: {ranking["paddock_number"]} in position {ranking["constructor_position"]} with {ranking["points"]} after round No. {round_number}. Championship chances: {championship_chance}.')
         constructor_ranking:ConstructorRanking = ConstructorRanking(round_number,ranking["paddock_number"],ranking["constructor_position"],ranking["points"],championship_chance)

@@ -16,7 +16,10 @@ class Round:
 
     def add_to_db(self,sql_connection) -> None:
         sql_cursor = sql_connection.cursor()
-        sql_cursor.execute('''INSERT OR IGNORE INTO Rounds (round_number,round_name,country,circuit,round_date,round_type,round_finished) VALUES (?,?,?,?,?,?,?)''',(self.round_number,self.round_name,self.country,self.circuit,self.round_date,self.round_type,self.round_finished,))
-        sql_connection.commit()
-        logger.info(f'Round No. {self.round_number} - {self.round_name} was succesfully added to DB.')
-    
+        try:
+            sql_cursor.execute('''INSERT INTO Rounds (round_number,round_name,country,circuit,round_date,round_type,round_finished) VALUES (?,?,?,?,?,?,?)''',(self.round_number,self.round_name,self.country,self.circuit,self.round_date,self.round_type,self.round_finished,))
+            sql_connection.commit()
+            logger.info(f'Round No. {self.round_number} - {self.round_name} was succesfully added to DB.')
+        except Exception as e:
+            logger.error(f'Error {e} detected when trying to commit round No. {self.round_number} - {self.round_name}')
+        

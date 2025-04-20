@@ -15,7 +15,8 @@ class ConstructorRanking:
     def add_to_db(self,sql_connection) -> None:
         sql_cursor = sql_connection.cursor()
         try:
-            sql_cursor.execute('''INSERT OR IGNORE INTO ConstructorsRanking (round_number,paddock_number,constructor_position,constructor_points,championship_chance) VALUES (?,?,?,?,?)''',(self.round_number,self.paddock_number,self.constructor_position,self.constructor_points,self.championship_chance,))
+            logger.info(f'Adding ranking to DB for constructor: {self.paddock_number} in position {self.constructor_position} with {self.constructor_points} after round No. {self.round_number}. Championship chances: {self.championship_chance}.')
+            sql_cursor.execute('''INSERT INTO ConstructorsRanking (round_number,paddock_number,constructor_position,constructor_points,championship_chance) VALUES (?,?,?,?,?)''',(self.round_number,self.paddock_number,self.constructor_position,self.constructor_points,self.championship_chance,))
             sql_connection.commit()
             logger.info(f'Ranking added to DB for constructor: {self.paddock_number} in position {self.constructor_position} with {self.constructor_points} after round No. {self.round_number}. Championship chances: {self.championship_chance}.')
         except Exception as e:

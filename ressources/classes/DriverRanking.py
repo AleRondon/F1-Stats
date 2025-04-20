@@ -14,7 +14,10 @@ class DriverRanking:
 
     def add_to_db(self,sql_connection) -> None:
         sql_cursor = sql_connection.cursor()
-        sql_cursor.execute('''INSERT OR IGNORE INTO DriversRanking (round_number,car_number,car_position,car_points,championship_chance) VALUES (?,?,?,?,?)''',(self.round_number,self.car_number,self.car_position,self.car_points,self.championship_chance,))
-        sql_connection.commit()
-        logger.info(f'Ranking added to DB for car: {self.car_number} in position {self.car_position} with {self.car_points} after round No. {self.round_number}. Championship chances: {self.championship_chance}.')
+        try:
+            sql_cursor.execute('''INSERT INTO DriversRanking (round_number,car_number,car_position,car_points,championship_chance) VALUES (?,?,?,?,?)''',(self.round_number,self.car_number,self.car_position,self.car_points,self.championship_chance,))
+            sql_connection.commit()
+            logger.info(f'Ranking added to DB for car: {self.car_number} in position {self.car_position} with {self.car_points} after round No. {self.round_number}. Championship chances: {self.championship_chance}.')
+        except Exception as e:
+            logger.error(f'Error {e} detected when trying to commit ranking for car No. {self.car_number} in round No. {self.round_number}')
     
