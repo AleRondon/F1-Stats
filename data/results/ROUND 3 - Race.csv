@@ -1,21 +1,21 @@
-Pos,No,Driver,Car,Time
-1,4,Lando Norris,McLaren Mercedes,1:42:06
-2,1,Max Verstappen,Red Bull Racing Honda RBPT,0.895
-3,63,George Russell,Mercedes,8.481
-4,12,Kimi Antonelli,Mercedes,10.135
-5,23,Alexander Albon,Williams Mercedes,12.773
-6,18,Lance Stroll,Aston Martin Aramco Mercedes,17.413
-7,27,Nico Hulkenberg,Kick Sauber Ferrari,18.423
-8,16,Charles Leclerc,Ferrari,19.826
-9,81,Oscar Piastri,McLaren Mercedes,20.448
-10,44,Lewis Hamilton,Ferrari,22.473
-11,10,Pierre Gasly,Alpine Renault,26.502
-12,22,Yuki Tsunoda,Racing Bulls Honda RBPT,29.884
-13,31,Esteban Ocon,Haas Ferrari,33.161
-14,87,Oliver Bearman,Haas Ferrari,40.351
-NC,30,Liam Lawson,Red Bull Racing Honda RBPT,DNF
-NC,5,Gabriel Bortoleto,Kick Sauber Ferrari,DNF
-NC,14,Fernando Alonso,Aston Martin Aramco Mercedes,DNF
-NC,55,Carlos Sainz,Williams Mercedes,DNF
-NC,7,Jack Doohan,Alpine Renault,DNF
-NC,6,Isack Hadjar,Racing Bulls Honda RBPT,DNF
+Pos,No,Driver,Car,Time,Points
+1,1,Max Verstappen,Red Bull Racing Honda RBPT,1:22:07,25
+2,4,Lando Norris,McLaren Mercedes,1.423,18
+3,81,Oscar Piastri,McLaren Mercedes,2.129,15
+4,16,Charles Leclerc,Ferrari,16.097,12
+5,63,George Russell,Mercedes,17.362,10
+6,12,Kimi Antonelli,Mercedes,18.671,8
+7,44,Lewis Hamilton,Ferrari,29.182,6
+8,6,Isack Hadjar,Racing Bulls Honda RBPT,37.134,4
+9,23,Alexander Albon,Williams Mercedes,40.367,2
+10,87,Oliver Bearman,Haas Ferrari,54.529,1
+11,14,Fernando Alonso,Aston Martin Aramco Mercedes,57.333,0
+12,22,Yuki Tsunoda,Racing Bulls Honda RBPT,58.401,0
+13,10,Pierre Gasly,Alpine Renault,62.122,0
+14,55,Carlos Sainz,Williams Mercedes,74.129,0
+15,7,Jack Doohan,Alpine Renault,81.314,0
+16,27,Nico Hulkenberg,Kick Sauber Ferrari,81.957,0
+17,30,Liam Lawson,Racing Bulls Honda RBPT,82.734,0
+18,31,Esteban Ocon,Haas Ferrari,83.438,0
+19,5,Gabriel Bortoleto,Kick Sauber Ferrari,83.897,0
+20,18,Lance Stroll,Aston Martin Aramco Mercedes,Lapped,0

@@ -120,4 +120,3 @@ def is_constructor_championship_chance(sql_connection,points:int,round_number:in
     else:
         logger.info(f'With {points} by Round: {round_number} is no longer possible to win the WCC')
         return False
-

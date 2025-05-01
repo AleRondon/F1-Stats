@@ -49,5 +49,3 @@ def get_session_type() -> str:
         print(e)
         logger.warning(f'Wrong session type: {session_type}')
         return get_session_type()
-
-

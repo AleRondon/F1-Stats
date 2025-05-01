@@ -55,6 +55,16 @@ def main():
     calculate_drivers_rankings(sql_connection,4)
     print(f'Calculating Constructors Rankings after round 04')
     calculate_constructors_rankings(sql_connection,4)
+    print(f'Importing results for round 05')
+    add_results("ROUND 5 - Q1.csv",5,"Q1",sql_connection)
+    add_results("ROUND 5 - Q2.csv",5,"Q2",sql_connection)
+    add_results("ROUND 5 - Q3.csv",5,"Q3",sql_connection)
+    add_results("ROUND 5 - Race.csv",5,"Race",sql_connection)
+    mark_round_done(sql_connection,5)
+    print(f'Calculating Drivers Rankings after round 05')
+    calculate_drivers_rankings(sql_connection,5)
+    print(f'Calculating Constructors Rankings after round 05')
+    calculate_constructors_rankings(sql_connection,5)
     print('Pre-imports done')
     
     while True:

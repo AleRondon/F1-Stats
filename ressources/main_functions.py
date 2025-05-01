@@ -115,6 +115,7 @@ def add_results(filename:str,round_number:int, session_type:str ,sql_connection:
                 car_number:int = int(result_item[RESULTS_COLUMNS.index('No')])
                 constructor_result_name:str = result_item[RESULTS_COLUMNS.index('Car')]
                 result_time_str:str = result_item[RESULTS_COLUMNS.index('Time')]
+                car_points: int = int(result_item[RESULTS_COLUMNS.index('Points')])
                 try:
                     result_time_float: float = convert_time_to_seconds(result_time_str)
                     result_time_final: str 
@@ -131,7 +132,6 @@ def add_results(filename:str,round_number:int, session_type:str ,sql_connection:
                     logger.info(f'Driver {car_number} did not finish: {result_time_str}')
                     result_time_final = result_time_str
                 constructor: Constructor = get_constructor_by_resultname_fromDB(sql_connection,constructor_result_name)
-                car_points: int = attribute_points(car_position,session_type)
                 logger.info(f'Driver No. {car_number} finishing in position {car_position} has been attributed {car_points} points for session {session_type} of round {round_number}')
                 result: Result = Result(car_position,car_number,constructor.paddock_number,round_number,session_type,result_time_final,car_points)
                 result.add_to_db(sql_connection)
@@ -205,10 +205,3 @@ def calculate_constructors_rankings(sql_connection:sqlite3.Connection,round_numb
         logger.info(f'Adding Ranking for constructor: {ranking["paddock_number"]} in position {ranking["constructor_position"]} with {ranking["points"]} after round No. {round_number}. Championship chances: {championship_chance}.')
         constructor_ranking:ConstructorRanking = ConstructorRanking(round_number,ranking["paddock_number"],ranking["constructor_position"],ranking["points"],championship_chance)
         constructor_ranking.add_to_db(sql_connection)
-
-
-
-
-
-    
-
