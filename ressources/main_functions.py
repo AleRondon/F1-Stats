@@ -205,3 +205,8 @@ def calculate_constructors_rankings(sql_connection:sqlite3.Connection,round_numb
         logger.info(f'Adding Ranking for constructor: {ranking["paddock_number"]} in position {ranking["constructor_position"]} with {ranking["points"]} after round No. {round_number}. Championship chances: {championship_chance}.')
         constructor_ranking:ConstructorRanking = ConstructorRanking(round_number,ranking["paddock_number"],ranking["constructor_position"],ranking["points"],championship_chance)
         constructor_ranking.add_to_db(sql_connection)
+
+def calculate_drivers_h2h_quali(sql_connection:sqlite3.Connection,driver_1_trigramme:str,driver_2_trigramme:str) -> None:
+    '''Calculates a head to head comparison between two drivers (input by trigramme, eg: VER, NOR), and returns the number of times driver 1 qualified ahead of driver 2 (and viceversa), and the average delta time between both.'''
+    pass
+
