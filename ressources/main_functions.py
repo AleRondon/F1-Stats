@@ -2,7 +2,8 @@ import sqlite3
 import logging
 import os
 import csv
-from typing import Dict
+import statistics
+from typing import Any, Dict
 from ressources.classes.Driver import Driver
 from ressources.classes.Constructor import Constructor
 from ressources.classes.Round import Round
@@ -10,7 +11,7 @@ from ressources.classes.Result import Result
 from ressources.classes.DriverRanking import DriverRanking
 from ressources.classes.ConstructorRanking import ConstructorRanking
 from ressources.helper_functions import convert_time_to_seconds, attribute_points, is_driver_championship_chance, is_constructor_championship_chance,get_previous_points_driver,get_previous_points_constructor
-from ressources.database_functions_sqlite3 import initialize_db,get_constructor_by_resultname_fromDB, mark_round_done_toDB, get_all_drivers_carnumber_fromDB,get_all_constructors_paddocknumber_fromDB,get_points_by_driver_round_fromDB,get_points_by_constructors_round_fromDB
+from ressources.database_functions_sqlite3 import initialize_db,get_constructor_by_resultname_fromDB, mark_round_done_toDB, get_all_drivers_carnumber_fromDB,get_all_constructors_paddocknumber_fromDB,get_points_by_driver_round_fromDB,get_points_by_constructors_round_fromDB, get_driver_by_trigramme_fromDB,get_last_round_fromDB, get_quali_results_by_driver_fromDB
 from ressources.constants import LOG_FILE, LOG_FORMAT, DRIVERS_FILE, DRIVERS_COLUMNS, CONSTRUCTORS_FILE, CONSTRUCTORS_COLUMNS, ROUNDS_FILE, ROUNDS_COLUMNS, RESULTS_FOLDER, RESULTS_COLUMNS
 
 logger = logging.getLogger(__name__)
@@ -208,5 +209,41 @@ def calculate_constructors_rankings(sql_connection:sqlite3.Connection,round_numb
 
 def calculate_drivers_h2h_quali(sql_connection:sqlite3.Connection,driver_1_trigramme:str,driver_2_trigramme:str) -> None:
     '''Calculates a head to head comparison between two drivers (input by trigramme, eg: VER, NOR), and returns the number of times driver 1 qualified ahead of driver 2 (and viceversa), and the average delta time between both.'''
+    #Get Drivers
+    driver1: Driver = get_driver_by_trigramme_fromDB(sql_connection,driver_1_trigramme)
+    driver2: Driver = get_driver_by_trigramme_fromDB(sql_connection,driver_2_trigramme)
+    #Get last run round
+    last_round: int = get_last_round_fromDB(sql_connection)
+    #Get results for Quali up to last round
+    results_driver1: list[Result] = get_quali_results_by_driver_fromDB(sql_connection,driver1.car_number)
+    results_driver2: list[Result] = get_quali_results_by_driver_fromDB(sql_connection,driver2.car_number)
+    #Compare results
+    ahead_count: dict[str,int] = {session_type: 0 for session_type in ['Q1', 'Q2', 'Q3']}
+    time_diff: dict[str,list] = {session_type: [] for session_type in ['Q1', 'Q2', 'Q3']}
+    for d1, d2 in zip(results_driver1,results_driver2):
+        if not (hasattr(d1, 'session_type') and d1.session_type == d2.session_type and hasattr(d2, 'session_type') and d2.session_type == d1.session_type):
+            continue
+        if not d1.result_time.isdigit() or not d2.result_time.isdigit():
+            continue
+        d1_result_time = int(d1.result_time)
+        d2_result_time = int(d2.result_time)
+
+        if d1.car_position < d2.car_position:
+            ahead_count[d1.session_type] += 1
+        time_diff[d1.session_type].append(d2_result_time - d1_result_time)
+        avg_time_diff:dict[str, int | None] = {session_type: statistics.mean(time_diffs) if time_diffs else None
+                     for session_type, time_diffs in time_diff.items()}            
+
+    #Print h2h
+    for key, value in ahead_count.items():
+        print(f'{key}:{value}')
+    print(avg_time_diff)
+
+    #print(f'{ahead_count=} and {avg_time_diff=}')
+    #print('#### Qualification Head to Head ####')
+    #print(f'Driver {driver1.name} vs Driver {driver2.name}')
+    #print(f'Q3: {ahead_count["Q3"]} with {avg_time_diff["Q3"]}s')
+    #print(f'Q2: {ahead_count["Q2"]} with {avg_time_diff["Q2"]}s')
+    #print(f'Q1: {ahead_count["Q1"]} with {avg_time_diff["Q1"]}s')
     pass
 

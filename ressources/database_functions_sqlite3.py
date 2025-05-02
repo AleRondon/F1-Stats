@@ -194,6 +194,14 @@ def get_done_sprints_fromDB(sql_connection:sqlite3.Connection) -> int:
     logger.info(f'{done_sprints} sprints has been finished out of {TOTAL_SPRINTS}')
     return done_sprints
 
+def get_last_round_fromDB(sql_connection:sqlite3.Connection) -> int:
+    '''Fetches the number of the last round marked as done in the Rounds Table of the Database'''
+    sql_cursor = sql_connection.cursor()
+    sql_cursor.execute('''SELECT round_number FROM Rounds WHERE round_finished = 1 ORDER BY round_number DESC''')
+    round_number:int = sql_cursor.fetchone()[0]
+    logger.info(f'Last round ran is No. {round_number}')
+    return round_number
+
 #############################################################################
 ####                          Results                                    ####
 #############################################################################
@@ -214,6 +222,24 @@ def get_points_by_driver_round_fromDB(sql_connection:sqlite3.Connection,car_numb
     logger.info(f'Driver No. {car_number} has {points} points by round No. {round_number}')
     return points
 
+def get_quali_results_by_driver_fromDB(sql_connection:sqlite3.Connection,car_number:int) -> list[Result]:
+    '''Fetches all the results for qualification sessions of a driver based on the car number'''
+    sql_cursor = sql_connection.cursor()
+    results_list: list = list()
+    sql_cursor.execute('''SELECT car_position,paddock_number,round_number,session_type,result_time,car_points FROM Results WHERE car_number = ? AND (session_type = "Q1" OR session_type = "Q2" OR session_type = "Q3") ORDER BY round_number''',(car_number,))
+    sql_results: list = sql_cursor.fetchall()
+    for sql_result in sql_results:
+        car_position: str = sql_result[0]
+        paddock_number: int = sql_result[1]
+        round_number: int = sql_result[2]
+        session_type: str = sql_result[3]
+        result_time: str = sql_result[4]
+        car_points: int = sql_result[5]
+        result: Result = Result(car_position,car_number,paddock_number,round_number,session_type,result_time,car_points)
+        results_list.append(result)
+    logger.info(f'Driver No. {car_number} has {len(results_list)} results for Qualification Sessions')
+    return results_list
+
 def get_points_by_constructors_round_fromDB(sql_connection:sqlite3.Connection,paddock_number:int,round_number:int) -> int:
     '''Fetches the sum of points (Race and Sprint) of a Constructors (by paddoc number, both drivers) and Round (by round number) from the Results Table of the Database'''
     logger.info(f'Fetching points for Constructor No. {paddock_number} by round No. {round_number}')
@@ -222,6 +248,7 @@ def get_points_by_constructors_round_fromDB(sql_connection:sqlite3.Connection,pa
     points:int = sql_cursor.fetchone()[0]
     logger.info(f'Constructor No. {paddock_number} has {points} points by round No. {round_number}')
     return points
+
     
 
 #############################################################################

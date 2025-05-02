@@ -1,5 +1,5 @@
 import logging
-from ressources.main_functions import check_and_initialize_db, create_new_driver, add_results, mark_round_done, calculate_drivers_rankings, calculate_constructors_rankings
+from ressources.main_functions import check_and_initialize_db, create_new_driver, add_results, mark_round_done, calculate_drivers_rankings, calculate_constructors_rankings,calculate_drivers_h2h_quali
 from ressources.data_entry import get_driver_trigramme, get_driver_car_number, get_round_number, get_session_type
 from ressources.constants import LOG_FILE, LOG_FORMAT, DATABASE_FILE
 
@@ -10,6 +10,7 @@ logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format=LOG_FORMAT)
 def main():
     sql_connection = check_and_initialize_db(DATABASE_FILE)
     logger.info("Program ready to run")
+
     # Importing previous results
     print(f'Importing results for round 01')
     add_results("ROUND 1 - Q1.csv",1,"Q1",sql_connection)
@@ -66,11 +67,13 @@ def main():
     print(f'Calculating Constructors Rankings after round 05')
     calculate_constructors_rankings(sql_connection,5)
     print('Pre-imports done')
+
     
     while True:
         print(f"\n### Welcome to F1 Stats ##")
         print(f"1. Add a Driver")
         print(f"2. Add result for a session via CSV")
+        print(f"3. Get Drivers Head to Head in Qualification")
         print(f"0. Exit")
         choice = int(input('Enter your choice (1 - 0):'))
         if choice == 1:
@@ -92,6 +95,11 @@ def main():
                 calculate_drivers_rankings(sql_connection,round_number)
                 calculate_constructors_rankings(sql_connection,round_number)
             print("=== Succesfully imported session result ===")
+        elif choice == 3:
+            logger.info("Option chosen: Drivers Head to Head in Qualification")
+            driver1: str = get_driver_trigramme()
+            driver2: str = get_driver_trigramme()
+            calculate_drivers_h2h_quali(sql_connection,driver1,driver2)
         elif choice == 0:
             print("Exiting...")
             break

@@ -13,6 +13,7 @@ class Driver:
         self.nationality: str = nationality
     
     def add_to_db(self,sql_connection) -> None:
+        '''Add the driver to the DB'''
         sql_cursor = sql_connection.cursor()
         try:
             sql_cursor.execute('''INSERT INTO Drivers (name, trigramme, car_number, nationality) VALUES (?,?,?,?)''',(self.name,self.trigramme,self.car_number,self.nationality,))
@@ -22,6 +23,7 @@ class Driver:
             logger.error(f'Error {e} detected when trying to commit Driver No. {self.car_number} - {self.name}')
         
     def add_to_csv(self) -> None:
+        '''Add the driver to a CSV File for startup'''
         try:
             with open(DRIVERS_FILE,"a",newline="") as csvfile:
                 driverDictionary: dict = {
@@ -36,3 +38,5 @@ class Driver:
         except FileNotFoundError:
             logger.critical(f"File {DRIVERS_FILE} not found")
             exit()
+
+
