@@ -221,60 +221,95 @@ def calculate_drivers_h2h_quali(sql_connection:sqlite3.Connection,driver_1_trigr
     driver1_ahead_counter: dict[str,int] = dict()
     driver2_ahead_counter: dict[str,int] = dict()
     comparable_sessions_counter: dict[str,int] = dict()
+    time_delta: float = 0
     time_delta_count: int = 0
     time_delta_sum: float = 0
 
     
-    for d1, d2 in zip(results_driver1,results_driver2):
-        print(f'For round {d1.round_number} and session {d1.session_type}, Driver 1 (No. {d1.car_number}) finished {d1.car_position} with {d1.result_time}, Driver 2 (No. {d2.car_number}) finished {d2.car_position} with {d2.result_time}')
-        print(f'Is D1 Result time a float: {d1.result_time.isdecimal()}')
-        #Checks that both drivers qualified for the session
-        if not (hasattr(d1, 'session_type') and d1.session_type == d2.session_type and hasattr(d2, 'session_type') and d2.session_type == d1.session_type):
-            print(f'Drivers do not have common session')
-            continue
-        #Checks if both drivers had a DNF, DNS or DSQ
-        if is_not_time_result(d1.result_time) and is_not_time_result(d2.result_time):
-            print(f'Both drivers had a DNF, DNS or DSQ')
-            continue
-        #Checks that driver 1 had a DNF, DNS or DSQ but driver 2 finished the session
-        if is_not_time_result(d1.result_time) and not is_not_time_result(d2.result_time):
-            print(f'For round {d1.round_number} and session {d1.session_type}, {driver1.name} had a {d1.result_time}, but {driver2.name} finished with a time {d2.result_time}')
-            driver2_ahead_counter[d1.session_type] += 1
-            comparable_sessions_counter[d1.session_type] += 1
-            continue
-        #Checks that driver 2 had a DNF, DNS or DSQ but driver 1 finished the session
-        if not is_not_time_result(d1.result_time) and is_not_time_result(d2.result_time):
-            print(f'For round {d1.round_number} and session {d1.session_type}, {driver2.name} had a {d2.result_time}, but {driver1.name} finished with a time {d1.result_time}')
-            driver1_ahead_counter[d1.session_type] += 1
-            comparable_sessions_counter[d1.session_type] += 1
-            continue
-        
-        d1_result_time = float(d1.result_time)
-        d2_result_time = float(d2.result_time)
+    for d1 in results_driver1:
+        for d2 in results_driver2:
+            print(f'=== Driver 1 (No. {d1.car_number}) finished {d1.car_position} in session {d1.session_type} with {d1.result_time} in round {d1.round_number}, Driver 2 (No. {d2.car_number}) finished {d2.car_position} in session {d2.session_type} with {d2.result_time} in round {d2.round_number} ===')
+            driver1_ahead_counter[d1.session_type] = driver1_ahead_counter.get(d1.session_type,0)
+            driver2_ahead_counter[d2.session_type] = driver2_ahead_counter.get(d2.session_type,0)
+            driver1_ahead_counter[d1.session_type] = driver1_ahead_counter.get(d2.session_type,0)
+            driver2_ahead_counter[d2.session_type] = driver2_ahead_counter.get(d1.session_type,0)
 
-        #Checks if driver 1 finished ahead of driver 2
-        if d1.car_position < d2.car_position:
-            print(f'For round {d1.round_number} and session {d1.session_type}, {driver1.name} finished in {d1.car_position}, while {driver2.name} finished in {d2.car_position}')
-            driver1_ahead_counter[d1.session_type] += 1
-            comparable_sessions_counter[d1.session_type] += 1
-            time_delta_sum += d1_result_time - d2_result_time
-            time_delta_count += 1
-        #Checks if driver 2 finished ahead of driver 1
-        if d1.car_position > d2.car_position:
-            print(f'For round {d1.round_number} and session {d1.session_type}, {driver1.name} finished in {d1.car_position}, while {driver2.name} finished in {d2.car_position}')
-            driver2_ahead_counter[d1.session_type] += 1
-            comparable_sessions_counter[d1.session_type] += 1
-            time_delta_sum += d1_result_time - d2_result_time
-            time_delta_count += 1
-    
+            #Checks that both drivers qualified for the session
+            if not (hasattr(d1, 'session_type') and d1.session_type == d2.session_type and hasattr(d2, 'session_type') and d2.session_type == d1.session_type and hasattr(d1, 'round_number') and d1.round_number == d2.round_number and hasattr(d2, 'round_number') and d2.round_number == d1.round_number):
+                print(f'Drivers do not have common session')
+                driver1_ahead_counter[d1.session_type] = driver1_ahead_counter.get(d1.session_type,0)
+                driver2_ahead_counter[d2.session_type] = driver2_ahead_counter.get(d2.session_type,0)
+                comparable_sessions_counter[d1.session_type] = comparable_sessions_counter.get(d1.session_type,0)
+                print(f'____ Counters____')
+                print(f'{driver1_ahead_counter[d1.session_type]=}[{d1.session_type=}] - {driver2_ahead_counter[d2.session_type]=}[{d2.session_type=}] / {comparable_sessions_counter[d1.session_type]=}[{d1.session_type=}]')
+                continue
+            #Checks if both drivers had a DNF, DNS or DSQ
+            if is_not_time_result(d1.result_time) and is_not_time_result(d2.result_time):
+                print(f'Both drivers had a DNF, DNS or DSQ')
+                driver1_ahead_counter[d1.session_type] = driver1_ahead_counter.get(d1.session_type,0)
+                driver2_ahead_counter[d2.session_type] = driver2_ahead_counter.get(d2.session_type,0)
+                comparable_sessions_counter[d1.session_type] = comparable_sessions_counter.get(d1.session_type,0)
+                print(f'____ Counters____')
+                print(f'{driver1_ahead_counter[d1.session_type]=}[{d1.session_type=}] - {driver2_ahead_counter[d2.session_type]=}[{d2.session_type=}] / {comparable_sessions_counter[d1.session_type]=}[{d1.session_type=}]')
+                continue
+            #Checks that driver 1 had a DNF, DNS or DSQ but driver 2 finished the session
+            if is_not_time_result(d1.result_time) and not is_not_time_result(d2.result_time):
+                print(f'For round {d1.round_number} and session {d1.session_type}, {driver1.name} had a {d1.result_time}, but {driver2.name} finished with a time {d2.result_time}')
+                driver1_ahead_counter[d1.session_type] = driver1_ahead_counter.get(d1.session_type,0)
+                driver2_ahead_counter[d2.session_type] = driver2_ahead_counter.get(d2.session_type,0) + 1
+                comparable_sessions_counter[d1.session_type] = comparable_sessions_counter.get(d1.session_type,0) + 1
+                print(f'# {driver2.name} ahead #')
+                print(f'____ Counters____')
+                print(f'{driver1_ahead_counter[d1.session_type]=}[{d1.session_type=}] - {driver2_ahead_counter[d2.session_type]=}[{d2.session_type=}] / {comparable_sessions_counter[d1.session_type]=}[{d1.session_type=}]')
+                continue
+            #Checks that driver 2 had a DNF, DNS or DSQ but driver 1 finished the session
+            if not is_not_time_result(d1.result_time) and is_not_time_result(d2.result_time):
+                print(f'For round {d1.round_number} and session {d1.session_type}, {driver2.name} had a {d2.result_time}, but {driver1.name} finished with a time {d1.result_time}')
+                driver1_ahead_counter[d1.session_type] = driver1_ahead_counter.get(d1.session_type,0) + 1
+                driver2_ahead_counter[d2.session_type] = driver2_ahead_counter.get(d2.session_type,0)
+                comparable_sessions_counter[d1.session_type] = comparable_sessions_counter.get(d1.session_type,0) + 1
+                print(f'# {driver1.name} ahead #')
+                print(f'____ Counters____')
+                print(f'{driver1_ahead_counter[d1.session_type]=}[{d1.session_type=}] - {driver2_ahead_counter[d2.session_type]=}[{d2.session_type=}] / {comparable_sessions_counter[d1.session_type]=}[{d1.session_type=}]')
+                continue
+            
+            d1_result_time = float(d1.result_time)
+            d2_result_time = float(d2.result_time)
+
+            #Checks if driver 1 finished ahead of driver 2
+            if int(d1.car_position) < int(d2.car_position):
+                print(f'For round {d1.round_number} and session {d1.session_type}, {driver1.name} finished in {d1.car_position}, while {driver2.name} finished in {d2.car_position}')
+                driver1_ahead_counter[d1.session_type] = driver1_ahead_counter.get(d1.session_type,0) + 1
+                driver2_ahead_counter[d2.session_type] = driver2_ahead_counter.get(d2.session_type,0)
+                comparable_sessions_counter[d1.session_type] = comparable_sessions_counter.get(d1.session_type,0) + 1
+                time_delta = d1_result_time - d2_result_time
+                time_delta_sum += time_delta
+                time_delta_count += 1
+                print(f'# {driver1.name} ahead #')
+                print(f'____ Counters____')
+                print(f'{driver1_ahead_counter[d1.session_type]=}[{d1.session_type=}] - {driver2_ahead_counter[d2.session_type]=}[{d2.session_type=}] / {comparable_sessions_counter[d1.session_type]=}[{d1.session_type=}]')
+                
+            #Checks if driver 2 finished ahead of driver 1
+            else:
+                print(f'For round {d1.round_number} and session {d1.session_type}, {driver1.name} finished in {d1.car_position}, while {driver2.name} finished in {d2.car_position}')
+                driver1_ahead_counter[d1.session_type] = driver1_ahead_counter.get(d1.session_type,0)
+                driver2_ahead_counter[d2.session_type] = driver2_ahead_counter.get(d2.session_type,0) + 1
+                comparable_sessions_counter[d1.session_type] = comparable_sessions_counter.get(d1.session_type,0) + 1
+                time_delta = d1_result_time - d2_result_time
+                time_delta_sum += time_delta
+                time_delta_count += 1
+                print(f'# {driver2.name} ahead #')
+                print(f'____ Counters____')
+                print(f'{driver1_ahead_counter[d1.session_type]=}[{d1.session_type=}] - {driver2_ahead_counter[d2.session_type]=}[{d2.session_type=}] / {comparable_sessions_counter[d1.session_type]=}[{d1.session_type=}]')
+                
     time_delta_average: float = time_delta_sum / time_delta_count    
 
     print('#### Qualification Head to Head ####')
-    print(f'Driver {driver1.name} vs Driver {driver2.name}')
-    print(f'Q1: {driver1_ahead_counter["Q1"]} - {driver1_ahead_counter["Q1"]} / {comparable_sessions_counter["Q1"]}')
-    print(f'Q2: {driver1_ahead_counter["Q2"]} - {driver1_ahead_counter["Q2"]} / {comparable_sessions_counter["Q2"]}')
-    print(f'Q3: {driver1_ahead_counter["Q3"]} - {driver1_ahead_counter["Q3"]} / {comparable_sessions_counter["Q3"]}')
-    print(f'With an average delta of {time_delta_average}s')
+    print(f'{driver1.name} vs {driver2.name}')
+    print(f'Q1: {driver1_ahead_counter["Q1"]} - {driver2_ahead_counter["Q1"]} / {comparable_sessions_counter["Q1"]}')
+    print(f'Q2: {driver1_ahead_counter["Q2"]} - {driver2_ahead_counter["Q2"]} / {comparable_sessions_counter["Q2"]}')
+    print(f'Q3: {driver1_ahead_counter["Q3"]} - {driver2_ahead_counter["Q3"]} / {comparable_sessions_counter["Q3"]}')
+    print(f'With an average delta of {time_delta_average:.3f}s')
 
     pass
 
