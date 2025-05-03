@@ -1,5 +1,5 @@
 import logging
-from ressources.main_functions import check_and_initialize_db, create_new_driver, add_results, mark_round_done, calculate_drivers_rankings, calculate_constructors_rankings,calculate_drivers_h2h_quali
+from ressources.main_functions import check_and_initialize_db, create_new_driver, add_results, mark_round_done, calculate_drivers_rankings, calculate_constructors_rankings,calculate_drivers_h2h_quali, calculate_drivers_h2h_sprint_quali, calculate_drivers_h2h_race, calculate_drivers_h2h_sprint
 from ressources.data_entry import get_driver_trigramme, get_driver_car_number, get_round_number, get_session_type
 from ressources.constants import LOG_FILE, LOG_FORMAT, DATABASE_FILE
 
@@ -70,10 +70,13 @@ def main():
     '''
     
     while True:
-        print(f"\n### Welcome to F1 Stats ##")
+        print(f"\n### Welcome to F1 Stats ###")
         print(f"1. Add a Driver")
         print(f"2. Add result for a session via CSV")
         print(f"3. Get Drivers Head to Head in Qualification")
+        print(f"4. Get Drivers Head to Head in Sprint Qualification")
+        print(f"5. Get Drivers Head to Head in Races")
+        print(f"6. Get Drivers Head to Head in Sprints")
         print(f"0. Exit")
         choice = int(input('Enter your choice (1 - 0):'))
         if choice == 1:
@@ -100,6 +103,21 @@ def main():
             driver1: str = get_driver_trigramme()
             driver2: str = get_driver_trigramme()
             calculate_drivers_h2h_quali(sql_connection,driver1,driver2)
+        elif choice == 4:
+            logger.info("Option chosen: Drivers Head to Head in Sprint Qualification")
+            driver1: str = get_driver_trigramme()
+            driver2: str = get_driver_trigramme()
+            calculate_drivers_h2h_sprint_quali(sql_connection,driver1,driver2)
+        elif choice == 5:
+            logger.info("Option chosen: Drivers Head to Head in Races")
+            driver1: str = get_driver_trigramme()
+            driver2: str = get_driver_trigramme()
+            calculate_drivers_h2h_race(sql_connection,driver1,driver2)
+        elif choice == 6:
+            logger.info("Option chosen: Drivers Head to Head in Sprints")
+            driver1: str = get_driver_trigramme()
+            driver2: str = get_driver_trigramme()
+            calculate_drivers_h2h_sprint(sql_connection,driver1,driver2)
         elif choice == 0:
             print("Exiting...")
             break
