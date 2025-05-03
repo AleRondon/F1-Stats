@@ -120,3 +120,9 @@ def is_constructor_championship_chance(sql_connection,points:int,round_number:in
     else:
         logger.info(f'With {points} by Round: {round_number} is no longer possible to win the WCC')
         return False
+
+def is_not_time_result(result:str) -> bool:
+    if result == 'DNS' or result == 'DNF' or result == 'DSQ':
+        return True
+    else:
+        return False    

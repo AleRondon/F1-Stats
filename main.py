@@ -10,7 +10,7 @@ logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format=LOG_FORMAT)
 def main():
     sql_connection = check_and_initialize_db(DATABASE_FILE)
     logger.info("Program ready to run")
-
+    '''
     # Importing previous results
     print(f'Importing results for round 01')
     add_results("ROUND 1 - Q1.csv",1,"Q1",sql_connection)
@@ -67,7 +67,7 @@ def main():
     print(f'Calculating Constructors Rankings after round 05')
     calculate_constructors_rankings(sql_connection,5)
     print('Pre-imports done')
-
+    '''
     
     while True:
         print(f"\n### Welcome to F1 Stats ##")

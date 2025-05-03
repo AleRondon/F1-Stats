@@ -10,7 +10,7 @@ from ressources.classes.Round import Round
 from ressources.classes.Result import Result
 from ressources.classes.DriverRanking import DriverRanking
 from ressources.classes.ConstructorRanking import ConstructorRanking
-from ressources.helper_functions import convert_time_to_seconds, attribute_points, is_driver_championship_chance, is_constructor_championship_chance,get_previous_points_driver,get_previous_points_constructor
+from ressources.helper_functions import convert_time_to_seconds, is_driver_championship_chance, is_constructor_championship_chance,get_previous_points_driver,get_previous_points_constructor, is_not_time_result
 from ressources.database_functions_sqlite3 import initialize_db,get_constructor_by_resultname_fromDB, mark_round_done_toDB, get_all_drivers_carnumber_fromDB,get_all_constructors_paddocknumber_fromDB,get_points_by_driver_round_fromDB,get_points_by_constructors_round_fromDB, get_driver_by_trigramme_fromDB,get_last_round_fromDB, get_quali_results_by_driver_fromDB
 from ressources.constants import LOG_FILE, LOG_FORMAT, DRIVERS_FILE, DRIVERS_COLUMNS, CONSTRUCTORS_FILE, CONSTRUCTORS_COLUMNS, ROUNDS_FILE, ROUNDS_COLUMNS, RESULTS_FOLDER, RESULTS_COLUMNS
 
@@ -218,32 +218,63 @@ def calculate_drivers_h2h_quali(sql_connection:sqlite3.Connection,driver_1_trigr
     results_driver1: list[Result] = get_quali_results_by_driver_fromDB(sql_connection,driver1.car_number)
     results_driver2: list[Result] = get_quali_results_by_driver_fromDB(sql_connection,driver2.car_number)
     #Compare results
-    ahead_count: dict[str,int] = {session_type: 0 for session_type in ['Q1', 'Q2', 'Q3']}
-    time_diff: dict[str,list] = {session_type: [] for session_type in ['Q1', 'Q2', 'Q3']}
+    driver1_ahead_counter: dict[str,int] = dict()
+    driver2_ahead_counter: dict[str,int] = dict()
+    comparable_sessions_counter: dict[str,int] = dict()
+    time_delta_count: int = 0
+    time_delta_sum: float = 0
+
+    
     for d1, d2 in zip(results_driver1,results_driver2):
+        print(f'For round {d1.round_number} and session {d1.session_type}, Driver 1 (No. {d1.car_number}) finished {d1.car_position} with {d1.result_time}, Driver 2 (No. {d2.car_number}) finished {d2.car_position} with {d2.result_time}')
+        print(f'Is D1 Result time a float: {d1.result_time.isdecimal()}')
+        #Checks that both drivers qualified for the session
         if not (hasattr(d1, 'session_type') and d1.session_type == d2.session_type and hasattr(d2, 'session_type') and d2.session_type == d1.session_type):
+            print(f'Drivers do not have common session')
             continue
-        if not d1.result_time.isdigit() or not d2.result_time.isdigit():
+        #Checks if both drivers had a DNF, DNS or DSQ
+        if is_not_time_result(d1.result_time) and is_not_time_result(d2.result_time):
+            print(f'Both drivers had a DNF, DNS or DSQ')
             continue
-        d1_result_time = int(d1.result_time)
-        d2_result_time = int(d2.result_time)
+        #Checks that driver 1 had a DNF, DNS or DSQ but driver 2 finished the session
+        if is_not_time_result(d1.result_time) and not is_not_time_result(d2.result_time):
+            print(f'For round {d1.round_number} and session {d1.session_type}, {driver1.name} had a {d1.result_time}, but {driver2.name} finished with a time {d2.result_time}')
+            driver2_ahead_counter[d1.session_type] += 1
+            comparable_sessions_counter[d1.session_type] += 1
+            continue
+        #Checks that driver 2 had a DNF, DNS or DSQ but driver 1 finished the session
+        if not is_not_time_result(d1.result_time) and is_not_time_result(d2.result_time):
+            print(f'For round {d1.round_number} and session {d1.session_type}, {driver2.name} had a {d2.result_time}, but {driver1.name} finished with a time {d1.result_time}')
+            driver1_ahead_counter[d1.session_type] += 1
+            comparable_sessions_counter[d1.session_type] += 1
+            continue
+        
+        d1_result_time = float(d1.result_time)
+        d2_result_time = float(d2.result_time)
 
+        #Checks if driver 1 finished ahead of driver 2
         if d1.car_position < d2.car_position:
-            ahead_count[d1.session_type] += 1
-        time_diff[d1.session_type].append(d2_result_time - d1_result_time)
-        avg_time_diff:dict[str, int | None] = {session_type: statistics.mean(time_diffs) if time_diffs else None
-                     for session_type, time_diffs in time_diff.items()}            
+            print(f'For round {d1.round_number} and session {d1.session_type}, {driver1.name} finished in {d1.car_position}, while {driver2.name} finished in {d2.car_position}')
+            driver1_ahead_counter[d1.session_type] += 1
+            comparable_sessions_counter[d1.session_type] += 1
+            time_delta_sum += d1_result_time - d2_result_time
+            time_delta_count += 1
+        #Checks if driver 2 finished ahead of driver 1
+        if d1.car_position > d2.car_position:
+            print(f'For round {d1.round_number} and session {d1.session_type}, {driver1.name} finished in {d1.car_position}, while {driver2.name} finished in {d2.car_position}')
+            driver2_ahead_counter[d1.session_type] += 1
+            comparable_sessions_counter[d1.session_type] += 1
+            time_delta_sum += d1_result_time - d2_result_time
+            time_delta_count += 1
+    
+    time_delta_average: float = time_delta_sum / time_delta_count    
 
-    #Print h2h
-    for key, value in ahead_count.items():
-        print(f'{key}:{value}')
-    print(avg_time_diff)
+    print('#### Qualification Head to Head ####')
+    print(f'Driver {driver1.name} vs Driver {driver2.name}')
+    print(f'Q1: {driver1_ahead_counter["Q1"]} - {driver1_ahead_counter["Q1"]} / {comparable_sessions_counter["Q1"]}')
+    print(f'Q2: {driver1_ahead_counter["Q2"]} - {driver1_ahead_counter["Q2"]} / {comparable_sessions_counter["Q2"]}')
+    print(f'Q3: {driver1_ahead_counter["Q3"]} - {driver1_ahead_counter["Q3"]} / {comparable_sessions_counter["Q3"]}')
+    print(f'With an average delta of {time_delta_average}s')
 
-    #print(f'{ahead_count=} and {avg_time_diff=}')
-    #print('#### Qualification Head to Head ####')
-    #print(f'Driver {driver1.name} vs Driver {driver2.name}')
-    #print(f'Q3: {ahead_count["Q3"]} with {avg_time_diff["Q3"]}s')
-    #print(f'Q2: {ahead_count["Q2"]} with {avg_time_diff["Q2"]}s')
-    #print(f'Q1: {ahead_count["Q1"]} with {avg_time_diff["Q1"]}s')
     pass
 
